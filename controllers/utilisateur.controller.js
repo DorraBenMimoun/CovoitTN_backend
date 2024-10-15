@@ -92,7 +92,7 @@ const loginUser=async(req,res)=>{
     data=req.body;
     user=await Utilisateur.findOne({email:data.email});
 
-    if(!user){res.status(404).send("email or password not correct");}
+    if(!user || !data ){res.status(404).send("email or password not correct");}
     else{
 
     validpass=bcrypt.compareSync(data.password,user.password); //pour la comparer avec mdp de user d email trouvé

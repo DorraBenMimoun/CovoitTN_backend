@@ -26,20 +26,48 @@ const getUtilisateurById = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 }
-const createUtilisateur = async (req, res) => {
-    // try {
-    //     const utilisateur = await Utilisateur.create(req.body);
-    //     res.status(200).json(utilisateur);
-    // } catch (err) {
-    //     res.status(500).json({ message: err.message });
-    // }
-    console.log("try /user/register");
-    res.status(200).json({ message: "try /user/register" });
-}
 
+
+//############### INSCRI ##############################################
 const registerUtilisateur = async (req, res) => {
     try {
         const data = req.body;
+
+        
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const phoneRegex = /^\d{8}$/;
+
+        const list_required = [data.nom, data.prenom, data.password, data.telephone, 
+            data.dateNaissance, 
+            data.sexe];
+
+for (let i = 0; i < list_required.length; i++) {
+    if (!list_required[i]) { 
+        return res.status(400).json({ message: 'tous les champs sont obligatoires' });
+    }
+}
+   
+             
+
+        // verification email et mdp et telephone
+        if (!emailRegex.test(data.email)) {
+            return res.status(400).json({ message: 'email invalide' });}
+
+        if (!passwordRegex.test(data.password)) {
+            return res.status(400).json({ message: 'password invalide' });
+        }
+
+        if (!phoneRegex.test(data.telephone)) {
+            return res.status(400).json({ message: 'num de téléphone invalide : doit contenir 8 chiffres.' });
+        }    
+
+//verif email dans la database
+        const database_email = await Utilisateur.findOne({ email: data.email });
+        if (database_email) {
+            return res.status(400).json({ message: 'essayer un autre email ' });
+        }
+
         const usr = new Utilisateur(data);
 
        
@@ -51,12 +79,15 @@ const registerUtilisateur = async (req, res) => {
 
        
         const savedUtilisateur = await usr.save();
+
         res.status(200).json(savedUtilisateur);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
+
+//############### LOGIN ##############################################
 const loginUser=async(req,res)=>{
     data=req.body;
     user=await Utilisateur.findOne({email:data.email});
@@ -75,6 +106,7 @@ const loginUser=async(req,res)=>{
     }}
 
 
+//############### mise a jour user ##############################################
 const updateUtilisateur = async (req, res) => {
     try {
         const id = req.params.id;
@@ -90,6 +122,9 @@ const updateUtilisateur = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 }
+
+
+//############### delete user ##############################################
 const deleteUtilisateur = async (req, res) => {
     try {
         const id = req.params.id;
@@ -102,10 +137,11 @@ const deleteUtilisateur = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 }
+
+
 module.exports = {
     getUtilisateurs,
     getUtilisateurById,
-    createUtilisateur,
     updateUtilisateur,
     deleteUtilisateur,
     registerUtilisateur,

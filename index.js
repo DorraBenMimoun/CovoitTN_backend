@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
-const mongoose = require('mongoose');
+require('./config/connect');
+
 const Utilisateur = require('./models/utilisateur.model');
 const UtilisateurRouter = require('./routes/utilisateur.route');
 const logger = require("morgan");
@@ -13,17 +14,13 @@ app.use(logger("dev"));
 //pour eviter les erreurs du front
 app.use(
   cors({
-    origin: ["http://localhost:3000/" ],
+    origin: ["http://localhost:3000" ],
     credentials: true,}));
 
 
 app.use('/user', UtilisateurRouter);
 
 
-
-mongoose.connect("mongodb+srv://covoittn:covoittn@covoittn.697vd.mongodb.net/?retryWrites=true&w=majority&appName=CovoitTN").then(() => {   
-  console.log("Connected to database!");
-});
 
 
   // Normaliser le port du serveur

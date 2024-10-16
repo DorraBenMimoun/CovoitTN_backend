@@ -3,6 +3,7 @@ const app = express();
 const mongoose = require('mongoose');
 const Utilisateur = require('./models/utilisateur.model');
 const UtilisateurRouter = require('./routes/utilisateur.route');
+const TrajetRouter = require('./routes/trajet.route');
 const logger = require("morgan");
 const cors = require("cors");
 const http = require("http");
@@ -18,6 +19,7 @@ app.use(
 
 
 app.use('/user', UtilisateurRouter);
+app.use('/trajet', TrajetRouter);
 
 
 

@@ -50,39 +50,46 @@ for (let i = 0; i < list_required.length; i++) {
     if (!list_required[i] || list_required[i].trim() === '') { 
         return res.status(400).json({ message: 'tous les champs sont obligatoires' });
     }
+    else{
+
+        if (!emailRegex.test(data.email)) { //verifier email and mdp
+            return res.status(400).json({ message: 'email invalide' });}
+        else{    
+            if(!nameRegex.test(data.nom))    {
+                return res.status(400).json({'message':'name invalide'});}
+            
+            if(!nameRegex.test(data.prenom))    {
+                return res.status(400).json({'message':'prenom invalide'});
+            }
+            if(!nameRegex.test(data.prenom))    {
+                return res.status(400).json({'message':'prenom invalide'});
+            }
+
+            if(!dateRegex.test(data.dateNaissance))    {
+                return res.status(400).json({'message':'date de naissance invalide format YYYY-MM-DD'});
+            }
+    
+            if (!passwordRegex.test(data.password)) {
+                return res.status(400).json({ message: 'password invalide' });
+            }
+    
+            if (!phoneRegex.test(data.telephone)) {
+                return res.status(400).json({ message: 'num de téléphone invalide : doit contenir 8 chiffres.' });
+            }    
+
+            }    
+    }
 }
    
-             
-
-        // verification email et mdp et telephone
-        if (!emailRegex.test(data.email)) {
-            return res.status(400).json({ message: 'email invalide' });}
-        
-        if(!nameRegex.test(data.nom))    {
-            return res.status(400).json({'message':'name invalide'});
-        }
-
-        if(!nameRegex.test(data.prenom))    {
-            return res.status(400).json({'message':'prenom invalide'});
-        }
-
-        if(!dateRegex.test(data.dateNaissance))    {
-            return res.status(400).json({'message':'date de naissance invalide format YYYY-MM-DD'});
-        }
-
-        if (!passwordRegex.test(data.password)) {
-            return res.status(400).json({ message: 'password invalide' });
-        }
-
-        if (!phoneRegex.test(data.telephone)) {
-            return res.status(400).json({ message: 'num de téléphone invalide : doit contenir 8 chiffres.' });
-        }    
+       
 
 //verif email dans la database ou pas (l'unicité)
         const database_email = await Utilisateur.findOne({ email: data.email });
         if (database_email) {
             return res.status(400).json({ message: 'essayer un autre email ' });
         }
+
+
 
         const usr = new Utilisateur(data);
 

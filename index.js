@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 require('./config/connect');
+const authentification=require("./middelware/auth_middelware");
 
 const Utilisateur = require('./models/utilisateur.model');
 const UtilisateurRouter = require('./routes/utilisateur.route');

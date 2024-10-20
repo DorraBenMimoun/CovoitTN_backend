@@ -7,9 +7,14 @@ const TrajetRouter = require('./routes/trajet.route');
 const logger = require("morgan");
 const cors = require("cors");
 const http = require("http");
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./config/swaggerConfig'); // Importez la configuration Swagger
 
 app.use(express.json());
 app.use(logger("dev"));
+
+// Définir les routes de Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //pour eviter les erreurs du front
 app.use(

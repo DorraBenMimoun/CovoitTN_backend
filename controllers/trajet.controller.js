@@ -203,6 +203,30 @@ exports.getTrajetsByPointDepartArrivee = async (req, res) => {
     }
 }
 
+exports.getEstimationPrix= async (req, res) => {
+    try {
+        const { distance, duree, prixEssence } = req.query;
+        
+        if (!distance || !duree || !prixEssence) {
+            return res.status(400).json({ message: "Les paramètres distance, duree et prixEssence sont requis." });
+        }
+
+        // Convertir les valeurs en nombre pour éviter les erreurs de calcul
+        const dist = parseFloat(distance);
+        const temps = parseFloat(duree);
+        const prix = parseFloat(prixEssence);
+
+        // Calcul du prix maximum basé sur distance, durée, et prix de l'essence
+        const estimationMax = dist * prix * 0.2 + temps * 0.1;
+
+        // Calcul du prix minimum basé uniquement sur la distance et une part plus basse du prix de l'essence
+        const estimationMin = dist * prix * 0.1; // 0.1 est un coefficient plus bas pour minimiser
+
+        res.status(200).json({ estimationPrixMin: estimationMin, estimationPrixMax: estimationMax });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 
 

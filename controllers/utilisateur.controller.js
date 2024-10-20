@@ -37,6 +37,10 @@ const registerUtilisateur = async (req, res) => {
         const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
         const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
         const phoneRegex = /^\d{8}$/;
+        const nameRegex = /^[a-zA-ZÀ-ÿ\- ]{2,}$/;
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+
 
         const list_required = [data.nom, data.prenom, data.password, data.telephone, 
             data.dateNaissance, 
@@ -53,6 +57,18 @@ for (let i = 0; i < list_required.length; i++) {
         // verification email et mdp et telephone
         if (!emailRegex.test(data.email)) {
             return res.status(400).json({ message: 'email invalide' });}
+        
+        if(!nameRegex.test(data.nom))    {
+            return res.status(400).json({'message':'name invalide'});
+        }
+
+        if(!nameRegex.test(data.prenom))    {
+            return res.status(400).json({'message':'prenom invalide'});
+        }
+
+        if(!dateRegex.test(data.dateNaissance))    {
+            return res.status(400).json({'message':'date de naissance invalide format YYYY-MM-DD'});
+        }
 
         if (!passwordRegex.test(data.password)) {
             return res.status(400).json({ message: 'password invalide' });

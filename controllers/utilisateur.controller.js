@@ -201,6 +201,11 @@ const deleteUtilisateur = async (req, res) => {
     }
 }
 
+const logout=(req,res)=>{
+    res.cookie('jwt','',{maxAge:1,httpOnly: true });
+    res.redirect('/user/login');
+    res.status(200).json({ message: 'logged out successfully' });
+}
 
 module.exports = {
     getUtilisateurs,
@@ -209,5 +214,6 @@ module.exports = {
     deleteUtilisateur,
     registerUtilisateur,
     loginUser,
+    logout,
 
 }

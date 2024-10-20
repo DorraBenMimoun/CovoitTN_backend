@@ -13,7 +13,7 @@ const authentification=(req,res,next)=>{
 if(err){console.log(err.message);}
 else{
     console.log(decodedToken);
-
+    req.user = decodedToken;
 next();
 }
         })

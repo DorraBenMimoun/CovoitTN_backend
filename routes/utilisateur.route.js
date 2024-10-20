@@ -8,7 +8,7 @@ router.post('/register',UtilisateurController.registerUtilisateur);
 router.post('/login',UtilisateurController.loginUser);
 
 
-router.get('/',authentification, UtilisateurController.getUtilisateurs);
+router.get('/', UtilisateurController.getUtilisateurs);
 router.get('/:id', authentification,UtilisateurController.getUtilisateurById);
 router.put('/:id',authentification, UtilisateurController.updateUtilisateur);
 router.delete('/:id', authentification,UtilisateurController.deleteUtilisateur);

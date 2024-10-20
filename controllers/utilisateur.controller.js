@@ -163,11 +163,17 @@ const loginUser=async(req,res)=>{
 const updateUtilisateur = async (req, res) => {
     try {
         const id = req.params.id;
-        const utilisateur = await Utilisateur.findByIdAndUpdate
-        (id, req.body, { new: true });
-        if (!utilisateur) {
-            res.status(404).json({ message: 'Utilisateur not found' });
+        if (!req.user || req.user.id !== id) {
+            return res.status(403).json({ message: 'acces refusé 404' });
         }
+
+
+        const utilisateur = await Utilisateur.findByIdAndUpdate (id, req.body, { new: true });
+       
+        if (!utilisateur) {
+           return  res.status(404).json({ message: 'Utilisateur not found' });
+        }
+
         const updatedUtilisateur = await Utilisateur.findById(id);
         res.status(200).json(updatedUtilisateur);
     }
@@ -181,9 +187,13 @@ const updateUtilisateur = async (req, res) => {
 const deleteUtilisateur = async (req, res) => {
     try {
         const id = req.params.id;
+       if( !req.user.id || req.user.id!=id){
+        return res.status(403).json({ message: 'acces refusé 404' });
+       }
+
         const utilisateur = await Utilisateur.findByIdAndDelete(id);
         if (!utilisateur) {
-            res.status(404).json({ message: 'Utilisateur not found' });
+            return res.status(404).json({ message: 'Utilisateur not found' });
         }
         res.status(200).json(utilisateur);
     } catch (err) {

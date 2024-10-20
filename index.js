@@ -8,8 +8,11 @@ const logger = require("morgan");
 const cors = require("cors");
 const http = require("http");
 
+const cookieParser=require("cookie-parser");
+
 app.use(express.json());
 app.use(logger("dev"));
+app.use(cookieParser());
 
 //pour eviter les erreurs du front
 app.use(

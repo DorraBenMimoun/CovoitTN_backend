@@ -35,7 +35,7 @@ const registerUtilisateur = async (req, res) => {
 
         
         const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
         const phoneRegex = /^\d{8}$/;
 
         const list_required = [data.nom, data.prenom, data.password, data.telephone, 
@@ -62,7 +62,7 @@ for (let i = 0; i < list_required.length; i++) {
             return res.status(400).json({ message: 'num de téléphone invalide : doit contenir 8 chiffres.' });
         }    
 
-//verif email dans la database
+//verif email dans la database ou pas (l'unicité)
         const database_email = await Utilisateur.findOne({ email: data.email });
         if (database_email) {
             return res.status(400).json({ message: 'essayer un autre email ' });
@@ -80,11 +80,29 @@ for (let i = 0; i < list_required.length; i++) {
        
         const savedUtilisateur = await usr.save();
 
-        res.status(200).json(savedUtilisateur);
+        const token=await create_tkn(savedUtilisateur._id)
+
+        res.cookie("jwt",token,{httpOnly:true , maxAge:3*24*60*60*1000})
+
+        res.status(200).json({user_id:savedUtilisateur._id,token:token});
+
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
+
+//####################TOKEN Create#####################################
+
+
+const create_tkn=(id)=>{
+
+    const payload = { id };
+    secret="123456789"
+    const maxAge=3*24*60*60
+
+    return jwt.sign(payload,secret,{expiresIn:maxAge});
+    
+    }
 
 
 //############### LOGIN ##############################################
@@ -100,8 +118,10 @@ const loginUser=async(req,res)=>{
        if(!validpass) {res.status(404).send("email or password invalide");}
 
        else {
-        payload={_id:user._id,email:user.email,name:user.name};
-       token=jwt.sign(payload,"123456789",{expiresIn:"1h"}); 
+    //     payload={_id:user._id,email:user.email,name:user.name};
+    //    token=jwt.sign(payload,"123456789",{expiresIn:"1h"}); 
+    token=create_tkn(user._id)
+
             res.status(200).send(token);}
     }}
 

@@ -130,23 +130,33 @@ const create_tkn=(id)=>{
 
 //############### LOGIN ##############################################
 const loginUser=async(req,res)=>{
-    data=req.body;
-    user=await Utilisateur.findOne({email:data.email});
+    const data=req.body;
 
-    if(!user || !data ){res.status(404).send("email or password not correct");}
-    else{
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    
 
-    validpass=bcrypt.compareSync(data.password,user.password); //pour la comparer avec mdp de user d email trouvé
+    if(!data || !emailRegex.test(data.email) || data.password.trim() === '') {
+        return res.status(400).json({'message':'format invalide'})
+    }
+    else {
+        try{
+           const user=await Utilisateur.findOne({'email':data.email});
 
-       if(!validpass) {res.status(404).send("email or password invalide");}
+            if (!user){ return res.status(404).json({'message':"email or password invalide"})}
 
-       else {
-    //     payload={_id:user._id,email:user.email,name:user.name};
-    //    token=jwt.sign(payload,"123456789",{expiresIn:"1h"}); 
-    token=create_tkn(user._id)
+            else { const validPass = bcrypt.compareSync(data.password, user.password);
+                if(!validPass){return res.status(404).json({"message":"email or password incorrect"})}
+                else{
+                    const token=create_tkn(user._id);
+                    res.cookie('jwt',token,{httpOnly:true,maxAge:3*24*60*60*1000});
+                    res.status(200).json({"user_id":user._id,"token":token});
+                }
+            }
 
-            res.status(200).send(token);}
-    }}
+        }
+        catch(err){return res.status(500).json({"message":err.message});}
+    }   
+}
 
 
 //############### mise a jour user ##############################################

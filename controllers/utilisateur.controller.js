@@ -43,7 +43,7 @@ const registerUtilisateur = async (req, res) => {
             data.sexe];
 
 for (let i = 0; i < list_required.length; i++) {
-    if (!list_required[i]) { 
+    if (!list_required[i] || list_required[i].trim() === '') { 
         return res.status(400).json({ message: 'tous les champs sont obligatoires' });
     }
 }

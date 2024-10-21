@@ -12,12 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-<<<<<<< HEAD
-    "bcrypt": "^5.1.1",
+     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
-=======
     "axios": "^1.7.7",
->>>>>>> 8deb8e95e8c69b5b1639b8729099183307b6792a
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "http": "^0.0.1-security",

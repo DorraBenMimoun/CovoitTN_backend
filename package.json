@@ -12,8 +12,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
+=======
+    "axios": "^1.7.7",
+>>>>>>> 8deb8e95e8c69b5b1639b8729099183307b6792a
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "http": "^0.0.1-security",
@@ -21,7 +25,9 @@
     "mongodb": "^6.9.0",
     "mongoose": "^8.7.1",
     "morgan": "^1.10.0",
-    "swagger": "^0.7.5"
+    "swagger": "^0.7.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

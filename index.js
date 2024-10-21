@@ -5,15 +5,21 @@ const authentification=require("./middelware/auth_middelware");
 
 const Utilisateur = require('./models/utilisateur.model');
 const UtilisateurRouter = require('./routes/utilisateur.route');
+const TrajetRouter = require('./routes/trajet.route');
 const logger = require("morgan");
 const cors = require("cors");
 const http = require("http");
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./config/swaggerConfig'); // Importez la configuration Swagger
 
 const cookieParser=require("cookie-parser");
 
 app.use(express.json());
 app.use(logger("dev"));
 app.use(cookieParser());
+
+// Définir les routes de Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //pour eviter les erreurs du front
 app.use(
@@ -23,6 +29,7 @@ app.use(
 
 
 app.use('/user', UtilisateurRouter);
+app.use('/trajet', TrajetRouter);
 
 
 

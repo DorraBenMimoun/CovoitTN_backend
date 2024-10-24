@@ -4,11 +4,18 @@ const TrajetController = require('../controllers/trajet.controller');
 
 /**
  * @swagger
+ * tags:
+ *   - name: Trajets
+ *     description: Routes liées aux trajets
+ */
+
+/**
+ * @swagger
  * /trajet/:
- *  
  *   get:
  *     summary: Récupère tous les trajets
-
+ *     tags:
+ *       - Trajets
  *     responses:
  *       200:
  *         description: Liste des trajets.
@@ -20,7 +27,8 @@ router.get('/', TrajetController.getTrajets);
  * /trajet/{id}:
  *   get:
  *     summary: Récupère un trajet par ID
- *
+ *     tags:
+ *       - Trajets
  *     parameters:
  *       - in: path
  *         name: id
@@ -40,7 +48,8 @@ router.get('/:id', TrajetController.getTrajetById);
  * /trajet/:
  *   post:
  *     summary: Créer un nouveau trajet
- *
+ *     tags:
+ *       - Trajets
  *     requestBody:
  *       required: true
  *       content:
@@ -69,7 +78,7 @@ router.get('/:id', TrajetController.getTrajetById);
  *                 type: number
  *                 description: Distance du trajet en kilomètres
  *                 example: 250.5
- *               nombrePlaces:
+ *               placesDispo:
  *                 type: number
  *                 description: Nombre de places disponibles
  *                 example: 4
@@ -138,7 +147,8 @@ router.post('/', TrajetController.createTrajet);
  * /trajet/{id}:
  *   put:
  *     summary: Met à jour un trajet par ID
- *
+ *     tags:
+ *       - Trajets
  *     parameters:
  *       - in: path
  *         name: id
@@ -174,7 +184,7 @@ router.post('/', TrajetController.createTrajet);
  *                 type: number
  *                 description: Distance du trajet en kilomètres
  *                 example: 250.5
- *               nombrePlaces:
+ *               placesDispo:
  *                 type: number
  *                 description: Nombre de places disponibles
  *                 example: 4
@@ -243,7 +253,8 @@ router.put('/:id', TrajetController.updateTrajet);
  * /trajet/{id}:
  *   delete:
  *     summary: Supprime un trajet par ID
- 
+ *     tags:
+ *       - Trajets
  *     parameters:
  *       - in: path
  *         name: id
@@ -263,7 +274,8 @@ router.delete('/:id', TrajetController.deleteTrajet);
  * /trajet/trajetsByConducteur/{id}:
  *   get:
  *     summary: Récupère les trajets par ID du conducteur
- *
+ *     tags:
+ *       - Trajets
  *     parameters:
  *       - in: path
  *         name: id
@@ -300,7 +312,7 @@ router.delete('/:id', TrajetController.deleteTrajet);
  *                   distance:
  *                     type: number
  *                     description: Distance du trajet en kilomètres
- *                   nombrePlaces:
+ *                   placesDispo:
  *                     type: number
  *                     description: Nombre de places disponibles
  *                   prixTrajet:

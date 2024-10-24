@@ -21,7 +21,7 @@ const trajetSchema = mongoose.Schema({
     type: Number,
     required: true,
   },
-  nombrePlaces: {
+  placesDispo: {
     type: Number,
     required: true,
   },

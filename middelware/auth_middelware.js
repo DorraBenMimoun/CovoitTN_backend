@@ -8,11 +8,10 @@ const authentification = (req, res, next) => {
       return res.status(401).json({ message: 'Authentication token missing' });
     }
     let decodedToken = jwt.verify(token, '123456789');
-    req.user = decodedToken;
+    req.user = decodedToken; // TODO : Get the user from the database
+
     next();
   } catch (err) {
-    console.log(err.message);
-
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Le token est expiré.' });
     } else {

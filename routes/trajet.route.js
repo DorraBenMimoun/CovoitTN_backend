@@ -20,7 +20,7 @@ router.get('/', TrajetController.getTrajets);
  * /trajet/{id}:
  *   get:
  *     summary: Récupère un trajet par ID
- *    
+ *
  *     parameters:
  *       - in: path
  *         name: id
@@ -40,7 +40,7 @@ router.get('/:id', TrajetController.getTrajetById);
  * /trajet/:
  *   post:
  *     summary: Créer un nouveau trajet
- *  
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -138,7 +138,7 @@ router.post('/', TrajetController.createTrajet);
  * /trajet/{id}:
  *   put:
  *     summary: Met à jour un trajet par ID
- *     
+ *
  *     parameters:
  *       - in: path
  *         name: id
@@ -263,7 +263,7 @@ router.delete('/:id', TrajetController.deleteTrajet);
  * /trajet/trajetsByConducteur/{id}:
  *   get:
  *     summary: Récupère les trajets par ID du conducteur
- *     
+ *
  *     parameters:
  *       - in: path
  *         name: id
@@ -350,8 +350,14 @@ router.delete('/:id', TrajetController.deleteTrajet);
 
 router.get('/trajetsByConducteur/:id', TrajetController.getTrajetsByConducteur);
 router.post('/trajetsByPointDepart', TrajetController.getTrajetsByPointDepart);
-router.post('/trajetsByPointArrivee', TrajetController.getTrajetsByPointArrivee);
-router.get('/trajetsByPointDepartArrivee', TrajetController.getTrajetsByPointDepartArrivee);
+router.post(
+  '/trajetsByPointArrivee',
+  TrajetController.getTrajetsByPointArrivee,
+);
+router.get(
+  '/trajetsByPointDepartArrivee',
+  TrajetController.getTrajetsByPointDepartArrivee,
+);
 /**
  * @swagger
  * /trajet/estimation/PrixMaxMin:

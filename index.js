@@ -11,6 +11,7 @@ const cors = require("cors");
 const http = require("http");
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocs = require('./config/swaggerConfig'); // Importez la configuration Swagger
+const swaggeruser = require('./config/swaggerConfig_user');
 
 const cookieParser=require("cookie-parser");
 
@@ -20,6 +21,7 @@ app.use(cookieParser());
 
 // Définir les routes de Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-v2', swaggerUi.serve, swaggerUi.setup(swaggeruser));
 
 //pour eviter les erreurs du front
 app.use(

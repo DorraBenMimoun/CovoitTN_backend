@@ -8,6 +8,8 @@ router.post('/register', UtilisateurController.registerUtilisateur);
 router.post('/login', UtilisateurController.loginUser);
 router.get('/logout', UtilisateurController.logout);
 
+router.get('/exist/:email', UtilisateurController.existEmail);
+
 router.get('/', UtilisateurController.getUtilisateurs);
 router.get('/:id([a-f0-9]{24})', UtilisateurController.getUtilisateurById);
 router.put(

@@ -24,10 +24,13 @@ const getUtilisateurById = async (req, res) => {
 //############### INSCRI ##############################################
 const registerUtilisateur = async (req, res) => {
   try {
-    const data = req.body;
+    // Data is in formdata format
+    console.log(req.body);
 
+    const data = req.body;
+    console.log(data);
     const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
-    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const passwordRegex = /^[A-Za-z\d]{6,}$/;
     const phoneRegex = /^\d{8}$/;
     const nameRegex = /^[a-zA-ZÀ-ÿ\- ]{2,}$/;
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -36,7 +39,7 @@ const registerUtilisateur = async (req, res) => {
       data.nom,
       data.prenom,
       data.password,
-      data.telephone,
+      data.phone,
       data.dateNaissance,
       data.sexe,
     ];
@@ -72,7 +75,7 @@ const registerUtilisateur = async (req, res) => {
             return res.status(400).json({ message: 'password invalide' });
           }
 
-          if (!phoneRegex.test(data.telephone)) {
+          if (!phoneRegex.test(data.phone)) {
             return res.status(400).json({
               message: 'num de téléphone invalide : doit contenir 8 chiffres.',
             });
@@ -103,7 +106,11 @@ const registerUtilisateur = async (req, res) => {
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ user_id: savedUtilisateur._id, token: token });
+    res.status(200).json({
+      user_id: savedUtilisateur._id,
+      token: token,
+      user: savedUtilisateur,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -145,7 +152,7 @@ const loginUser = async (req, res) => {
             httpOnly: true,
             maxAge: 3 * 24 * 60 * 60 * 1000,
           });
-          res.status(200).json({ user_id: user._id, token: token });
+          res.status(200).json({ token: token, user: user });
         }
       }
     } catch (err) {

@@ -6,7 +6,7 @@ const { authentification } = require('../middelware/auth_middelware.js');
 /**
  * @swagger
  * tags:
- *   - name: USERS
+ *   - name: Users
  *     description: Routes liées aux utilisateurs
  */
 
@@ -14,7 +14,7 @@ const { authentification } = require('../middelware/auth_middelware.js');
  * @swagger
  * /user/register:
  *   post:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Enregistrer un nouvel utilisateur
  *     description: Crée un nouvel utilisateur dans la base de données.
  *     requestBody:
@@ -78,7 +78,7 @@ router.post('/register', UtilisateurController.registerUtilisateur);
  * @swagger
  * /user/login:
  *   post:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Connexion d'un utilisateur
  *     description: Authentifie un utilisateur avec son email et son mot de passe.
  *     requestBody:
@@ -109,7 +109,7 @@ router.post('/login', UtilisateurController.loginUser);
  * @swagger
  * /user/logout:
  *   get:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Déconnexion d'un utilisateur
  *     description: Déconnecte l'utilisateur actuel.
  *     responses:
@@ -119,16 +119,35 @@ router.post('/login', UtilisateurController.loginUser);
  *         description: Erreur serveur
  */
 router.get('/logout', UtilisateurController.logout);
-
-router.get('/exist/:email', UtilisateurController.existEmail);
-
+/**
+ * @swagger
+ * /user/exist/{email}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Vérifier si un email existe
+ *     description: Vérifier si un email existe
+ *     parameters:
+ *       - name: email
+ *         in: path
+ *         required: true
+ *         description: Email de l'utilisateur
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Email existe
+ *       404:
+ *         description: Email n'existe pas
+ *       500:
+ *         description: Erreur serveur
+ */
 router.get('/exist/:email', UtilisateurController.existEmail);
 
 /**
  * @swagger
  * /user:
  *   get:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Récupérer tous les utilisateurs
  *     description: Renvoie une liste de tous les utilisateurs.
  *     responses:
@@ -143,7 +162,7 @@ router.get('/', UtilisateurController.getUtilisateurs);
  * @swagger
  * /user/{id}:
  *   get:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Récupérer un utilisateur par ID
  *     description: Renvoie les détails d'un utilisateur spécifique.
  *     parameters:
@@ -167,7 +186,7 @@ router.get('/:id([a-f0-9]{24})', UtilisateurController.getUtilisateurById);
  * @swagger
  * /user/{id}:
  *   put:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Mettre à jour un utilisateur
  *     description: Met à jour les informations d'un utilisateur spécifique.
  *     parameters:
@@ -236,7 +255,7 @@ router.put(
  * @swagger
  * /user/{id}:
  *   delete:
- *     tags: [USERS]
+ *     tags: [Users]
  *     summary: Supprimer un utilisateur
  *     description: Supprime un utilisateur spécifique.
  *     parameters:

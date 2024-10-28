@@ -58,8 +58,8 @@ const registerUtilisateur = async (req, res) => {
           if (!nameRegex.test(data.prenom)) {
             return res.status(400).json({ message: 'prenom invalide' });
           }
-          if (!nameRegex.test(data.prenom)) {
-            return res.status(400).json({ message: 'prenom invalide' });
+          if (!nameRegex.test(data.nom)) {
+            return res.status(400).json({ message: 'nom invalide' });
           }
 
           if (!dateRegex.test(data.dateNaissance)) {

@@ -18,7 +18,7 @@ const utilisateurSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    telephone: {
+    phone: {
       type: String,
       required: true,
     },
@@ -29,13 +29,13 @@ const utilisateurSchema = mongoose.Schema(
     sexe: {
       type: String,
       required: true,
-      enum: ['Homme', 'Femme'],
+      enum: ['male', 'female', 'other'],
     },
     photo: {
       type: String,
       required: false,
     },
-    dateInscript: {
+    createdAt: {
       type: Date,
       required: true,
       default: Date.now,
@@ -46,16 +46,9 @@ const utilisateurSchema = mongoose.Schema(
     },
     pieceIdentite: {
       type: String,
-      required: false,
     },
     permis: {
       type: String,
-      required: false,
-    },
-    statusVerfier: {
-      type: Boolean,
-      required: true,
-      default: false,
     },
     dateFinBannissement: {
       type: Date,

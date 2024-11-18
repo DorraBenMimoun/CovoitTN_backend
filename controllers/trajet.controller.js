@@ -65,13 +65,13 @@ exports.createTrajet = async (req, res) => {
     // S'assurer que les points de départ et d'arrivée contiennent les coordonnées lat et lng
     const { pointDepart, pointArrivee } = req.body;
 
-    if (!pointDepart || !pointDepart.lat || !pointDepart.lng) {
+    if (!pointDepart) {
       return res
         .status(400)
         .json({ message: 'Les coordonnées du point de départ sont requises.' });
     }
 
-    if (!pointArrivee || !pointArrivee.lat || !pointArrivee.lng) {
+    if (!pointArrivee) {
       return res
         .status(400)
         .json({ message: "Les coordonnées du point d'arrivée sont requises." });
@@ -267,33 +267,41 @@ exports.getTrajetsByPointDepartArrivee = async (req, res) => {
   }
 };
 
-exports.getEstimationPrix = async (req, res) => {
-  // TODO : Retirer duree, retirer prix essence
-  //  Prix essence : Constante dans le backend en dinar
-  // Nombre de place : Parametre de la requete
-  try {
-    const { distance, duree, prixEssence } = req.query;
+const PRIX_ESSENCE = 2.525; // Prix le litre d'essence en dinar
+const DISTANCE_PAR_LITRE = 20; // Distance en km par litre d'essence
 
-    if (!distance || !duree || !prixEssence) {
+exports.getEstimationPrix = async (req, res) => {
+  try {
+    const { distance } = req.params;
+
+    // Validation: vérifier si la distance est fournie et si elle est un nombre valide
+    if (!distance) {
+      return res.status(400).json({ message: 'La distance est requise.' });
+    }
+
+    console.log(distance);
+    const distanceNum = parseFloat(distance);
+    if (isNaN(distanceNum) || distanceNum <= 0) {
       return res.status(400).json({
-        message: 'Les paramètres distance, duree et prixEssence sont requis.',
+        message: 'Veuillez fournir une distance valide (un nombre positif).',
       });
     }
 
-    // Convertir les valeurs en nombre pour éviter les erreurs de calcul
-    const dist = parseFloat(distance);
-    const temps = parseFloat(duree);
-    const prix = parseFloat(prixEssence);
+    // Calcul du prix estimé
+    const litresRequis = distanceNum / DISTANCE_PAR_LITRE; // Nombre de litres nécessaires
+    const prixEstime = litresRequis * PRIX_ESSENCE; // Coût total en dinars
 
-    // Calcul du prix maximum basé sur distance, durée, et prix de l'essence
-    const estimationMax = dist * prix * 0.2 + temps * 0.1;
+    // Retourner une fourchette avec prix min et max
+    // Arrondi au plus grand nombre entier
+    const min = prixEstime < 1 ? 1 : Math.round(prixEstime);
+    const max = min + 2;
 
-    // Calcul du prix minimum basé uniquement sur la distance et une part plus basse du prix de l'essence
-    const estimationMin = dist * prix * 0.1; // 0.1 est un coefficient plus bas pour minimiser
-
+    // Réponse avec le prix estimé
     res.status(200).json({
-      estimationPrixMin: estimationMin,
-      estimationPrixMax: estimationMax,
+      distance: distanceNum,
+      prixEstime: prixEstime,
+      minPrix: min,
+      maxPrix: max,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

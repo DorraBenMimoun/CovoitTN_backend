@@ -102,14 +102,6 @@ router.get('/:id', TrajetController.getTrajetById);
  *                 type: number
  *                 description: Nombre maximum de passagers à l'arrière
  *                 example: 3
- *               marqueVoiture:
- *                 type: string
- *                 description: Marque de la voiture
- *                 example: "Toyota"
- *               couleurVoiture:
- *                 type: string
- *                 description: Couleur de la voiture
- *                 example: "Bleue"
  *               pointDepart:
  *                 type: object
  *                 properties:
@@ -208,14 +200,6 @@ router.post('/', TrajetController.createTrajet);
  *                 type: number
  *                 description: Nombre maximum de passagers à l'arrière
  *                 example: 3
- *               marqueVoiture:
- *                 type: string
- *                 description: Marque de la voiture
- *                 example: "Toyota"
- *               couleurVoiture:
- *                 type: string
- *                 description: Couleur de la voiture
- *                 example: "Bleue"
  *               pointDepart:
  *                 type: object
  *                 properties:
@@ -330,12 +314,6 @@ router.delete('/:id', TrajetController.deleteTrajet);
  *                   maxPassArriere:
  *                     type: number
  *                     description: Nombre maximum de passagers à l'arrière
- *                   marqueVoiture:
- *                     type: string
- *                     description: Marque de la voiture
- *                   couleurVoiture:
- *                     type: string
- *                     description: Couleur de la voiture
  *                   pointDepart:
  *                     type: object
  *                     properties:
@@ -372,33 +350,15 @@ router.get(
 );
 /**
  * @swagger
- * /trajet/estimation/PrixMaxMin:
+ * /trajet/estimation/PrixMaxMin/{distance}:
  *   get:
  *     summary: Estime le prix maximum d'un trajet basé sur le prix de l'essence, la distance, et la durée
  *     tags:
  *       - Trajets
  *     parameters:
- *       - in: query
- *         name: prixEssence
- *         required: true
- *         description: Prix du kilomètre d'essence en euros
- *         schema:
- *           type: number
- *           example: 0.1
- *       - in: query
+ *       - in: path
  *         name: distance
  *         required: true
- *         description: Distance du trajet en kilomètres
- *         schema:
- *           type: number
- *           example: 250
- *       - in: query
- *         name: duree
- *         required: true
- *         description: Durée du trajet en heures
- *         schema:
- *           type: number
- *           example: 3
  *     responses:
  *       200:
  *         description: Prix estimé pour le trajet
@@ -412,6 +372,9 @@ router.get(
  *                   description: Prix estimé en euros
  *                   example: 25.0
  */
-router.get('/estimation/PrixMaxMin', TrajetController.getEstimationPrix);
+router.get(
+  '/estimation/PrixMaxMin/:distance',
+  TrajetController.getEstimationPrix,
+);
 
 module.exports = router;

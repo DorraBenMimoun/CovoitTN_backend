@@ -45,30 +45,26 @@ const trajetSchema = mongoose.Schema({
     type: Number,
     required: false,
   },
-  marqueVoiture: {
-    type: String,
-    required: true,
-  },
-  couleurVoiture: {
-    type: String,
-    required: true,
-  },
-  datePublication: {
+  createdAt: {
     type: Date,
     required: true,
     default: Date.now,
   },
   pointDepart: {
     type: {
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
+      description: { type: String, required: true },
+      place_id: { type: String, required: true },
+      reference: { type: String, required: true },
+      terms: { type: Array, required: true },
     },
     required: true,
   },
   pointArrivee: {
     type: {
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
+      description: { type: String, required: true },
+      place_id: { type: String, required: true },
+      reference: { type: String, required: true },
+      terms: { type: Array, required: true },
     },
     required: true,
   },

@@ -1,4 +1,5 @@
 const Trajet = require('../models/trajet.model.js');
+const Reservation = require('../models/reservation.model.js'); 
 
 /*const axios = require('axios');
 
@@ -102,7 +103,7 @@ exports.getTrajetById = async (req, res) => {
   }
 };
 // Update a Trajet by the id in the request
-exports.updateTrajet = async (req, res) => {
+exports.updateTrajet2 = async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -130,6 +131,68 @@ exports.updateTrajet = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+// Update a Trajet by the id in the request
+exports.updateTrajet = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updatedData = req.body;
+
+    // Récupérer le trajet actuel
+    const trajet = await Trajet.findById(id);
+    console.log('ancien trajet:',trajet);
+
+    if (!trajet) {
+      return res.status(404).json({ message: 'Trajet non trouvé' });
+    }
+
+    // 1- Récupérer les réservations associées à ce trajet
+    const reservations = await Reservation.find({ idTrajet: id });
+    console.log('reservation associee a cette trajet',reservations);
+
+    // 2- Calculer le nombre de places restantes
+    const nbrPlacesReservees = reservations.reduce((sum, res) => sum + res.nbrPlacesReservees, 0);
+    console.log('nombre de places reservees: ',nbrPlacesReservees);
+    const placesRestantes = trajet.placesDispo - nbrPlacesReservees;
+    console.log('place restante: ',placesRestantes);
+
+    // Vérification si le nombre de places disponibles mis à jour est inférieur à 0 ou dépasse le nombre de réservations existantes
+    if (updatedData.placesDispo < nbrPlacesReservees||updatedData.placesDispo < 0) {
+      return res.status(400).json({ message: 'Nombre de places invalides.' });
+    }
+
+    // Vérification des modifications interdites si des réservations existent
+    const restrictedFields = ['prix', 'placesDispo', 'heureDepart', 'destination', 'depart'];
+    if (reservations.length > 0 && restrictedFields.some(field => updatedData[field] !== undefined && updatedData[field] !== trajet[field])) {
+      return res.status(400).json({ message: 'Impossible de modifier certaines informations car des réservations existent.' });
+    }
+
+    // Vérifier si le prix est dans une plage valide si la destination ou le départ est mis à jour
+    /*if ((updatedData.destination || updatedData.depart) && (updatedData.prix < trajet.prixMin || updatedData.prix > trajet.prixMax)) {
+      return res.status(400).json({ message: 'Le prix est hors de la plage autorisée.' });
+    }*/
+
+ 
+
+    // Vérification des champs qui nécessitent une notification aux passagers
+    /*const notificationFields = ['fumeur', 'animaux', 'filleUniquement', 'maxPassagersArriere', 'marqueVoiture', 'couleurVoiture'];
+    const fieldsToNotify = notificationFields.filter(field => updatedData[field] !== undefined && updatedData[field] !== trajet[field]);
+    if (fieldsToNotify.length > 0) {
+      // TODO : Informer les passagers des modifications
+      // Exemple : sendNotificationToPassengers(trajet, fieldsToNotify);
+    }
+*/
+    // Mettre à jour le trajet
+    const updatedTrajet = await Trajet.findByIdAndUpdate(id, updatedData, { new: true });
+
+    res.status(200).json(updatedTrajet);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+  
 // Delete a Trajet with the specified id in the request
 exports.deleteTrajet = async (req, res) => {
   try {

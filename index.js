@@ -12,6 +12,7 @@ const swaggerDocs = require('./config/swaggerConfig'); // Importez la configurat
 
 const UtilisateurRouter = require('./routes/utilisateur.route');
 const TrajetRouter = require('./routes/trajet.route');
+const ReservationRouter = require('./routes/reservation.route');
 
 const cookieParser = require('cookie-parser');
 
@@ -32,6 +33,7 @@ app.use(
 
 app.use('/user', UtilisateurRouter);
 app.use('/trajet', TrajetRouter);
+app.use('/reservation', ReservationRouter);
 
 // Normaliser le port du serveur
 const normalizePort = (val) => {

@@ -2,6 +2,9 @@ const express = require('express');
 const app = express();
 require('./config/connect');
 const authentification = require('./middelware/auth_middelware');
+const bodyParser = require('body-parser');
+const multer = require('multer');
+const upload = multer();
 
 const logger = require('morgan');
 const cors = require('cors');
@@ -16,7 +19,18 @@ const ReservationRouter = require('./routes/reservation.route');
 
 const cookieParser = require('cookie-parser');
 
-app.use(express.json());
+app.use(express.urlencoded({ limit: '100mb', extended: false }));
+app.use(express.json({ limit: '100mb' }));
+app.use(bodyParser.json({ limit: 100 * 1024 * 1024 }));
+app.use(
+  bodyParser.urlencoded({
+    limit: 100 * 1024 * 1024,
+    extended: true,
+    parameterLimit: 50000,
+  }),
+);
+app.use(upload.any()); // Utilisez cela pour parser les données de FormData
+
 app.use(logger('dev'));
 app.use(cookieParser());
 

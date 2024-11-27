@@ -45,9 +45,9 @@ app.use(
   }),
 );
 
-app.use('/user', UtilisateurRouter);
-app.use('/trajet', TrajetRouter);
-app.use('/reservation', ReservationRouter);
+app.use('/users', UtilisateurRouter);
+app.use('/trajets', TrajetRouter);
+app.use('/reservations', ReservationRouter);
 
 // Normaliser le port du serveur
 const normalizePort = (val) => {

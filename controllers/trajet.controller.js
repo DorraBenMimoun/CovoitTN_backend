@@ -149,13 +149,10 @@ exports.updateTrajet = async (req, res) => {
 
     // 1- Récupérer les réservations associées à ce trajet
     const reservations = await Reservation.find({ idTrajet: id });
-    console.log('reservation associee a cette trajet',reservations);
 
     // 2- Calculer le nombre de places restantes
     const nbrPlacesReservees = reservations.reduce((sum, res) => sum + res.nbrPlacesReservees, 0);
-    console.log('nombre de places reservees: ',nbrPlacesReservees);
     const placesRestantes = trajet.placesDispo - nbrPlacesReservees;
-    console.log('place restante: ',placesRestantes);
 
     // Vérification si le nombre de places disponibles mis à jour est inférieur à 0 ou dépasse le nombre de réservations existantes
     if (updatedData.placesDispo < nbrPlacesReservees||updatedData.placesDispo < 0) {
@@ -230,105 +227,78 @@ exports.deleteAllTrajets = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+//get all trajets by passager
+exports.getTrajetsByPassager = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const reservations = await Reservation.find({ idPassager: id });
+    const trajets = await Trajet.find({ _id: { $in: reservations.map(res => res.idTrajet) } });
+    res.status(200).json(trajets);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+//get all tragets by conducteur
 exports.getTrajetsByConducteur = async (req, res) => {
   try {
     const id = req.params.id;
-    const trajets = await Trajet.find({ idConducteur: id });
+    const trajets = await Trajet.find
+    ({ idConducteur: id });
     res.status(200).json(trajets);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Find all Trajets with a specific pointDepart
-exports.getTrajetsByPointDepart = async (req, res) => {
+
+
+exports.filterTrajets = async (req, res) => {
   try {
-    const { lat, lng } = req.body; // Utiliser query params pour obtenir les coordonnées
-    if (!lat || !lng) {
-      return res.status(400).json({
-        message: 'Les coordonnées lat et lng du point de départ sont requises.',
-      });
+
+    console.log('Requête reçue avec paramètres:', req.query);
+
+    // Récupération des critères de filtrage depuis les paramètres de la requête
+    const {  pointArriveeDescription,pointDepartDescription, fumeur, animaux, filleUniquement, placesDispo } = req.query;
+
+    // Vérification de la présence du point d'arrivée (obligatoire)
+    if (!pointArriveeDescription) {
+      return res.status(400).json({ message: "La description du point d'arrivée est obligatoire." });
     }
 
-    const trajets = await Trajet.find({
-      'pointDepart.lat': lat,
-      'pointDepart.lng': lng,
-    });
-    res.status(200).json(trajets);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+    // Construction dynamique de la requête de filtrage
+    const filtre = { 'pointArrivee.description': pointArriveeDescription };
 
-// Find all Trajets with a specific pointArrivee
-exports.getTrajetsByPointArrivee = async (req, res) => {
-  try {
-    const { lat, lng } = req.body;
-    if (!lat || !lng) {
-      return res.status(400).json({
-        message: "Les coordonnées lat et lng du point d'arrivée sont requises.",
-      });
+    if (pointDepartDescription) {
+      filtre['pointDepart.description'] = pointDepartDescription;
     }
-
-    const trajets = await Trajet.find({
-      'pointArrivee.lat': lat,
-      'pointArrivee.lng': lng,
-    });
-    res.status(200).json(trajets);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-exports.searchTrajet = async (req, res) => {
-  try {
-    const {
-      pointArrivee,
-      pointDepart,
-      dateDepart,
-      heureDepart,
-      fumeur,
-      animaux,
-      filleUniquement,
-      maxPassArriere,
-      prixMax,
-      prixMin,
-    } = req.query;
-    // localhost:3000/trajets?heure=10:30&animaux=true
-    // let trajets = Trajet.find({animaux : animaux})
-
-    // Pour heuredepart fourchette de 2h
-
-    // point arrivee point depart utiliser LIKE
-    // EXEMPLE : je cherche "SOUKRA" j'aimerais avoir le trajet  depart qui contient soukra ex : '12 Rue du Parc, Soukra, Tunisia'
-  } catch (error) {
-    res.stauts(500).json[{ message: error.message }];
-  }
-};
-
-// Find all Trajets with a specific pointDepart and pointArrivee
-exports.getTrajetsByPointDepartArrivee = async (req, res) => {
-  try {
-    console.log('depart', req.body);
-    const { latDepart, lngDepart, latArrivee, lngArrivee } = req.body;
-    if (!latDepart || !lngDepart || !latArrivee || !lngArrivee) {
-      return res.status(400).json({
-        message:
-          "Les coordonnées des points de départ et d'arrivée sont requises.",
-      });
+    if (fumeur !== undefined) {
+      filtre.fumeur = fumeur === 'true'; // Convertir en booléen
     }
+    if (animaux !== undefined) {
+      filtre.animaux = animaux === 'true'; // Convertir en booléen
+    }
+    if (filleUniquement !== undefined) {
+      filtre.filleUniquement = filleUniquement === 'true'; // Convertir en booléen
+    }
+    if (placesDispo) {
+      filtre.placesDispo = { $gte: Number(placesDispo) }; // Vérifie que les places disponibles sont suffisantes
+    }
+    console.log('Filtres utilisés:', filtre);
 
-    const trajets = await Trajet.find({
-      'pointDepart.lat': latDepart,
-      'pointDepart.lng': lngDepart,
-      'pointArrivee.lat': latArrivee,
-      'pointArrivee.lng': lngArrivee,
-    });
+    // Exécution de la requête avec les filtres construits
+    const trajets = await Trajet.find(filtre);
+
+    // Retour des trajets filtrés
     res.status(200).json(trajets);
   } catch (err) {
+    // Gestion des erreurs
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const PRIX_ESSENCE = 2.525; // Prix le litre d'essence en dinar
 const DISTANCE_PAR_LITRE = 20; // Distance en km par litre d'essence

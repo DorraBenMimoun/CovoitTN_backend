@@ -12,7 +12,7 @@ const { authentification } = require('../middelware/auth_middelware.js');
 
 /**
  * @swagger
- * /user/register:
+ * /users/register:
  *   post:
  *     tags: [Users]
  *     summary: Enregistrer un nouvel utilisateur
@@ -76,7 +76,7 @@ router.post('/register', UtilisateurController.registerUtilisateur);
 
 /**
  * @swagger
- * /user/login:
+ * /users/login:
  *   post:
  *     tags: [Users]
  *     summary: Connexion d'un utilisateur
@@ -107,7 +107,7 @@ router.post('/login', UtilisateurController.loginUser);
 
 /**
  * @swagger
- * /user/logout:
+ * /users/logout:
  *   get:
  *     tags: [Users]
  *     summary: Déconnexion d'un utilisateur
@@ -121,7 +121,7 @@ router.post('/login', UtilisateurController.loginUser);
 router.get('/logout', UtilisateurController.logout);
 /**
  * @swagger
- * /user/exist/{email}:
+ * /users/exist/{email}:
  *   get:
  *     tags: [Users]
  *     summary: Vérifier si un email existe
@@ -145,7 +145,7 @@ router.get('/exist/:email', UtilisateurController.existEmail);
 
 /**
  * @swagger
- * /user:
+ * /users:
  *   get:
  *     tags: [Users]
  *     summary: Récupérer tous les utilisateurs
@@ -160,7 +160,7 @@ router.get('/', UtilisateurController.getUtilisateurs);
 
 /**
  * @swagger
- * /user/{id}:
+ * /users/{id}:
  *   get:
  *     tags: [Users]
  *     summary: Récupérer un utilisateur par ID
@@ -184,7 +184,7 @@ router.get('/:id([a-f0-9]{24})', UtilisateurController.getUtilisateurById);
 
 /**
  * @swagger
- * /user/{id}:
+ * /users/{id}:
  *   put:
  *     tags: [Users]
  *     summary: Mettre à jour un utilisateur

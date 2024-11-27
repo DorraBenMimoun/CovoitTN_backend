@@ -83,3 +83,96 @@ exports.deleteReservation = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+//get all reservations by conducteur
+exports.getReservationsByConducteur = async (req, res) => {
+  try {
+    const idConducteur = req.params.id;
+    const trajets = await Trajet.find({ idConducteur });
+    const reservations = await Reservation.find({ idTrajet: { $in: trajets.map(trajet => trajet._id) } });
+    res.status(200).json(reservations);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Accepter une réservation
+exports.acceptReservation = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+      return res.status(404).json({ message: 'Réservation non trouvée' });
+    }
+
+    reservation.etat = 'Acceptée';
+    await reservation.save();
+
+    res.status(200).json(reservation);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Refuser une réservation
+exports.refuseReservation = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+      return res.status(404).json({ message: 'Réservation non trouvée' });
+    }
+
+    reservation.etat = 'Refusée';
+    await reservation.save();
+
+    res.status(200).json(reservation);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Annuler une réservation
+exports.cancelReservation = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+      return res.status(404).json({ message: 'Réservation non trouvée' });
+    }
+
+    reservation.etat = 'Annulée';
+    await reservation.save();
+
+    res.status(200).json(reservation);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+//get all reservations by passager
+exports.getReservationsByPassager = async (req, res) => {
+  try {
+    const idPassager = req.params.id;
+    const reservations = await Reservation.find({ idPassager });
+    res.status(200).json(reservations);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+//get all reservations by trajet
+exports.getReservationsByTrajet = async (req, res) => {
+  try {
+    const idTrajet = req.params.id;
+    const reservations = await Reservation.find({ idTrajet });
+    res.status(200).json(reservations);
+  }
+  catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+

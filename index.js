@@ -17,6 +17,7 @@ const UtilisateurRouter = require('./routes/utilisateur.route');
 const TrajetRouter = require('./routes/trajet.route');
 const ReservationRouter = require('./routes/reservation.route');
 const FeedbackRouter = require('./routes/feedback.route');
+const ReclamationRouter = require('./routes/reclamation.route');
 
 const cookieParser = require('cookie-parser');
 
@@ -50,6 +51,7 @@ app.use('/users', UtilisateurRouter);
 app.use('/trajets', TrajetRouter);
 app.use('/reservations', ReservationRouter);
 app.use('/feedbacks', FeedbackRouter);
+app.use('/reclamations', ReclamationRouter);
 
 // Normaliser le port du serveur
 const normalizePort = (val) => {

@@ -29,7 +29,7 @@ const utilisateurSchema = mongoose.Schema(
     sexe: {
       type: String,
       required: true,
-      enum: ['male', 'female', 'other'],
+      enum: ['Homme','Femme'],
     },
     photo: {
       type: String,
@@ -59,6 +59,12 @@ const utilisateurSchema = mongoose.Schema(
       required: true,
       default: false,
     },
+    statusVerfier:
+    {
+      type: Boolean,
+      required: true,
+      default: false,
+    }
   },
   {
     timestamps: true,

@@ -32,7 +32,7 @@ const { authentification } = require('../middelware/auth_middelware.js');
  *                 type: string
  *               password:
  *                 type: string
- *               telephone:
+ *               phone:
  *                 type: string
  *               dateNaissance:
  *                 type: string
@@ -49,19 +49,14 @@ const { authentification } = require('../middelware/auth_middelware.js');
  *                 type: string
  *               permis:
  *                 type: string
- *               statusVerfier:
- *                 type: boolean
- *               dateFinBannissement:
- *                 type: string
- *                 format: date-time
- *               compteActif:
- *                 type: boolean
+ *               
+ *              
  *             required:
  *               - nom
  *               - prenom
  *               - email
  *               - password
- *               - telephone
+ *               - phone
  *               - dateNaissance
  *               - sexe
  *     responses:
@@ -211,7 +206,7 @@ router.get('/:id([a-f0-9]{24})', UtilisateurController.getUtilisateurById);
  *                 type: string
  *               password:
  *                 type: string
- *               telephone:
+ *               phone:
  *                 type: string
  *               dateNaissance:
  *                 type: string

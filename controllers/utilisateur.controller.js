@@ -2,6 +2,14 @@ const Utilisateur = require('../models/utilisateur.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
+const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+const passwordRegex = /^[A-Za-z\d]{6,}$/;
+const phoneRegex = /^\d{8}$/;
+const nameRegex = /^[a-zA-ZÀ-ÿ\- ]{2,}$/;
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+
 const getUtilisateurs = async (req, res) => {
   try {
     const utilisateurs = await Utilisateur.find();
@@ -25,15 +33,8 @@ const getUtilisateurById = async (req, res) => {
 const registerUtilisateur = async (req, res) => {
   try {
     // Data is in formdata format
-    console.log(req.body);
 
     const data = req.body;
-    console.log(data);
-    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
-    const passwordRegex = /^[A-Za-z\d]{6,}$/;
-    const phoneRegex = /^\d{8}$/;
-    const nameRegex = /^[a-zA-ZÀ-ÿ\- ]{2,}$/;
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
     const list_required = [
       data.nom,
@@ -165,19 +166,85 @@ const loginUser = async (req, res) => {
 const updateUtilisateur = async (req, res) => {
   try {
     const id = req.params.id;
+
+    // Vérification de l'accès utilisateur
     if (!req.user || req.user.id !== id) {
-      return res.status(403).json({ message: 'acces refusé 404' });
+      return res.status(403).json({ message: 'Accès refusé' });
     }
 
-    const utilisateur = await Utilisateur.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const data = req.body;
 
-    if (!utilisateur) {
-      return res.status(404).json({ message: 'Utilisateur not found' });
+    // Champs obligatoires pour la mise à jour
+    const list_required = [
+      data.nom,
+      data.prenom,
+      data.dateNaissance,
+      data.phone,
+      data.sexe,
+    ];
+
+    for (let i = 0; i < list_required.length; i++) {
+      if (!list_required[i] || list_required[i].trim() === '') {
+        return res
+          .status(400)
+          .json({ message: 'Tous les champs obligatoires doivent être remplis' });
+      }
     }
 
-    const updatedUtilisateur = await Utilisateur.findById(id);
+    // Vérification des formats des champs
+    if (data.email && !emailRegex.test(data.email)) {
+      return res.status(400).json({ message: 'Email invalide' });
+    }
+
+    if (data.nom && !nameRegex.test(data.nom)) {
+      return res.status(400).json({ message: 'Nom invalide' });
+    }
+
+    if (data.prenom && !nameRegex.test(data.prenom)) {
+      return res.status(400).json({ message: 'Prénom invalide' });
+    }
+
+    if (data.dateNaissance && !dateRegex.test(data.dateNaissance)) {
+      return res
+        .status(400)
+        .json({ message: 'Date de naissance invalide (format YYYY-MM-DD)' });
+    }
+
+    if (data.password && !passwordRegex.test(data.password)) {
+      return res
+        .status(400)
+        .json({ message: 'Mot de passe invalide (au moins 6 caractères)' });
+    }
+
+    if (data.phone && !phoneRegex.test(data.phone)) {
+      return res
+        .status(400)
+        .json({ message: 'Numéro de téléphone invalide (8 chiffres)' });
+    }
+
+    // Vérification de l'unicité de l'email
+    if (data.email) {
+      const existingUser = await Utilisateur.findOne({ email: data.email, _id: { $ne: id } });
+      if (existingUser) {
+        return res
+          .status(400)
+          .json({ message: 'Cet email est déjà utilisé par un autre utilisateur' });
+      }
+    }
+
+    // Hash du mot de passe si modifié
+    if (data.password) {
+      const salt = bcrypt.genSaltSync(10);
+      data.password = bcrypt.hashSync(data.password, salt);
+    }
+
+    // Mise à jour dans la base de données
+    const updatedUtilisateur = await Utilisateur.findByIdAndUpdate(id, data, { new: true });
+
+    if (!updatedUtilisateur) {
+      return res.status(404).json({ message: 'Utilisateur introuvable' });
+    }
+
     res.status(200).json(updatedUtilisateur);
   } catch (err) {
     res.status(500).json({ message: err.message });

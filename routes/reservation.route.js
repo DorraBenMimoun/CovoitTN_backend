@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const reservationController = require('../controllers/reservation.controller');
+const { authentification } = require('../middelware/auth_middelware');
 
 /**
  * @swagger

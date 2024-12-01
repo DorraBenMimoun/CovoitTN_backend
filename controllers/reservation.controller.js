@@ -105,6 +105,11 @@ exports.acceptReservation = async (req, res) => {
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation non trouvée' });
     }
+    /*const trajet = await Trajet.findById(reservation.idTrajet);
+    
+    if(trajet.idConducteur !== req.user.id){
+      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
+    }*/
 
     reservation.etat = 'Acceptée';
     await reservation.save();
@@ -124,6 +129,11 @@ exports.refuseReservation = async (req, res) => {
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation non trouvée' });
     }
+    /*const trajet = await Trajet.findById(reservation.idTrajet);
+    
+    if(trajet.idConducteur !== req.user.id){
+      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
+    }*/
 
     reservation.etat = 'Refusée';
     await reservation.save();
@@ -144,6 +154,11 @@ exports.cancelReservation = async (req, res) => {
       return res.status(404).json({ message: 'Réservation non trouvée' });
     }
 
+
+   /* if(reservation.idPassager !== req.user.id){
+      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
+    }*/
+
     reservation.etat = 'Annulée';
     await reservation.save();
 
@@ -157,6 +172,10 @@ exports.cancelReservation = async (req, res) => {
 exports.getReservationsByPassager = async (req, res) => {
   try {
     const idPassager = req.params.id;
+    
+    /* if(idPassager !== req.user.id){
+      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
+    }*/
     const reservations = await Reservation.find({ idPassager });
     res.status(200).json(reservations);
   } catch (err) {

@@ -253,26 +253,46 @@ exports.getTrajetsByConducteur = async (req, res) => {
   }
 };
 
+// Function to normalize the terms (remove special characters like hyphens, underscores, etc.)
+function normalizeTerm(term) {
+  return term.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); // Retire les caractères non alphanumériques et met en minuscule
+}
 
+// Function to normalize the terms (remove special characters like hyphens, underscores, etc.)
+function normalizeTerm(term) {
+  return term.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); // Retire les caractères non alphanumériques et met en minuscule
+}
+
+// Function to create a regex that ignores special characters between letters
+function createRegexForTerm(term) {
+  const normalizedTerm = normalizeTerm(term);
+  // Create a regex that matches the normalized term with optional characters between the letters
+  return new RegExp(normalizedTerm.split('').join('[^a-zA-Z0-9]*'), 'i'); // 'i' for case-insensitive
+}
 
 exports.filterTrajets = async (req, res) => {
   try {
-
     console.log('Requête reçue avec paramètres:', req.query);
 
     // Récupération des critères de filtrage depuis les paramètres de la requête
-    const {  pointArriveeDescription,pointDepartDescription, fumeur, animaux, filleUniquement, placesDispo } = req.query;
+    const { pointArriveeTerm, pointDepartTerm, fumeur, animaux, filleUniquement, placesDispo } = req.query;
 
-    // Vérification de la présence du point d'arrivée (obligatoire)
-    if (!pointArriveeDescription) {
-      return res.status(400).json({ message: "La description du point d'arrivée est obligatoire." });
+    // Vérification de la présence du terme du point d'arrivée (obligatoire)
+    if (!pointArriveeTerm) {
+      return res.status(400).json({ message: "Le terme du point d'arrivée est obligatoire." });
     }
 
-    // Construction dynamique de la requête de filtrage
-    const filtre = { 'pointArrivee.description': pointArriveeDescription };
+    // Normalisation des termes (supprime les tirets, underscores, etc.)
+    const regexPointArriveeTerm = createRegexForTerm(pointArriveeTerm);
+    const regexPointDepartTerm = pointDepartTerm ? createRegexForTerm(pointDepartTerm) : null;
 
-    if (pointDepartDescription) {
-      filtre['pointDepart.description'] = pointDepartDescription;
+    // Construction dynamique de la requête de filtrage
+    const filtre = {
+      'pointArrivee.terms': { $elemMatch: { value: { $regex: regexPointArriveeTerm } } },
+    };
+
+    if (regexPointDepartTerm) {
+      filtre['pointDepart.terms'] = { $elemMatch: { value: { $regex: regexPointDepartTerm } } };
     }
     if (fumeur !== undefined) {
       filtre.fumeur = fumeur === 'true'; // Convertir en booléen
@@ -286,7 +306,9 @@ exports.filterTrajets = async (req, res) => {
     if (placesDispo) {
       filtre.placesDispo = { $gte: Number(placesDispo) }; // Vérifie que les places disponibles sont suffisantes
     }
+
     console.log('Filtres utilisés:', filtre);
+    console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
 
     // Exécution de la requête avec les filtres construits
     const trajets = await Trajet.find(filtre);
@@ -295,9 +317,50 @@ exports.filterTrajets = async (req, res) => {
     res.status(200).json(trajets);
   } catch (err) {
     // Gestion des erreurs
+    console.error('Erreur lors du filtrage des trajets:', err);
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.quickSearch = async (req, res) => {
+  try {
+    console.log('Requête reçue avec paramètre de recherche:', req.query);
+
+    // Récupération du terme de recherche depuis les paramètres de la requête
+    const { searchTerm } = req.query;
+
+    // Vérification que le terme de recherche est présent
+    if (!searchTerm) {
+      return res.status(400).json({ message: "Le terme de recherche est obligatoire." });
+    }
+
+    // Normalisation du terme de recherche
+    const regexSearchTerm = createRegexForTerm(searchTerm);
+
+    // Construction dynamique de la requête de recherche
+    const filtre = {
+      'pointArrivee.terms': { $elemMatch: { value: { $regex: regexSearchTerm } } },
+      'pointDepart.terms': { $elemMatch: { value: { $regex: regexSearchTerm } } }
+    };
+
+    console.log('Filtres utilisés pour la recherche rapide:', filtre);
+    console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
+
+    // Exécution de la requête avec le filtre construit
+    const trajets = await Trajet.find(filtre);
+
+    // Retour des résultats trouvés
+    res.status(200).json(trajets);
+  } catch (err) {
+    // Gestion des erreurs
+    console.error('Erreur lors de la recherche rapide:', err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+
 
 
 const PRIX_ESSENCE = 2.525; // Prix le litre d'essence en dinar

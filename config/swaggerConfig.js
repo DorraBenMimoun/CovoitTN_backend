@@ -15,7 +15,7 @@ const swaggerOptions = {
       ],
     },
   },
-  apis: ['./routes/trajet.route.js', './routes/utilisateur.route.js','./routes/reservation.route.js'], // Dossier où Swagger va lire les annotations
+  apis: ['./routes/trajet.route.js', './routes/utilisateur.route.js','./routes/reservation.route.js','./routes/feedback.route.js'], // Dossier où Swagger va lire les annotations
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

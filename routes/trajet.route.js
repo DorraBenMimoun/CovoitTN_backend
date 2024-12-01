@@ -23,34 +23,6 @@ const TrajetController = require('../controllers/trajet.controller');
  */
 router.get('/', TrajetController.getTrajets);
 
-/**
- * @swagger
- * /trajets/{id}:
- *   get:
- *     tags:
- *       - Trajets
- *     summary: Récupérer un trajet par ID
- *     description: Récupère les détails d'un trajet spécifique en fonction de son ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID du trajet
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Détails du trajet récupérés avec succès
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Trajet'
- *       404:
- *         description: Trajet non trouvé
- *       500:
- *         description: Erreur serveur
- */
-router.get('/:id', TrajetController.getTrajetById);
 
 /**
  * @swagger
@@ -173,17 +145,17 @@ router.get('/estimation/PrixMaxMin/:distance',TrajetController.getEstimationPrix
  *       - Trajets
  *     parameters:
  *       - in: query
- *         name: pointArriveeDescription
+ *         name: pointArriveeTerm
  *         required: true
  *         schema:
  *           type: string
- *         description: Description du point d'arrivée (obligatoire)
+ *         description: Terme du point d'arrivée à rechercher (obligatoire, insensible à la casse)
  *       - in: query
- *         name: pointDepartDescription
+ *         name: pointDepartTerm
  *         required: false
  *         schema:
  *           type: string
- *         description: Description du point de départ (optionnel)
+ *         description: Terme du point de départ à rechercher (optionnel, insensible à la casse)
  *       - in: query
  *         name: fumeur
  *         required: false
@@ -216,13 +188,62 @@ router.get('/estimation/PrixMaxMin/:distance',TrajetController.getEstimationPrix
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Trajet'  
+ *                 $ref: '#/components/schemas/Trajet'
  *       400:
- *         description: La description du point d'arrivée est obligatoire
+ *         description: Le terme du point d'arrivée est obligatoire
  *       500:
  *         description: Erreur interne du serveur
  */
+
 router.get('/filter/Trajets', TrajetController.filterTrajets);
+
+/**
+ * @swagger
+ * /trajets/quicksearch:
+ *   get:
+ *     summary: Recherche rapide des trajets
+ *     tags:
+ *       - Trajets
+ *     description: Recherche des trajets en fonction d'un terme (par exemple point d'arrivée ou point de départ).
+ *     parameters:
+ *       - name: searchTerm
+ *         in: query
+ *         description: Terme à rechercher dans les points d'arrivée ou de départ
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Liste des trajets correspondant au terme de recherche
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   pointArrivee:
+ *                     type: string
+ *                     description: Point d'arrivée du trajet
+ *                   pointDepart:
+ *                     type: string
+ *                     description: Point de départ du trajet
+ *                   fumeur:
+ *                     type: boolean
+ *                     description: Si le trajet est fumeur
+ *                   animaux:
+ *                     type: boolean
+ *                     description: Si les animaux sont autorisés
+ *                   placesDispo:
+ *                     type: integer
+ *                     description: Nombre de places disponibles
+ *       400:
+ *         description: Le terme de recherche est obligatoire
+ *       500:
+ *         description: Erreur serveur interne
+ */
+router.get('/quicksearch', TrajetController.quickSearch);
+
 
 /**
  * @swagger
@@ -289,6 +310,34 @@ router.get('/Passager/:id', TrajetController.getTrajetsByPassager);
  *         description: Erreur interne du serveur
  */
 router.get('/Conducteur/:id', TrajetController.getTrajetsByConducteur);
+/**
+ * @swagger
+ * /trajets/{id}:
+ *   get:
+ *     tags:
+ *       - Trajets
+ *     summary: Récupérer un trajet par ID
+ *     description: Récupère les détails d'un trajet spécifique en fonction de son ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID du trajet
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails du trajet récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Trajet'
+ *       404:
+ *         description: Trajet non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get('/:id', TrajetController.getTrajetById);
 
 
 /**

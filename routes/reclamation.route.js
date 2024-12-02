@@ -58,7 +58,6 @@ router.post('/', reclamationController.createReclamation);
  */
 router.get('/', reclamationController.getAllReclamations);
 
-
 /**
  * @swagger
  * /reclamations/{id}:
@@ -124,7 +123,6 @@ router.put('/:id', reclamationController.updateReclamation);
  *         description: Erreur interne
  */
 router.delete('/:id', reclamationController.deleteReclamation);
-
 
 /**
  * @swagger

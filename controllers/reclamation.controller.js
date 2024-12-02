@@ -142,10 +142,10 @@ exports.traiterReclamation = async (req, res) => {
           res.status(500).json({ message: err.message });
       }
   
-  }
+};
   
-  //Rejeter une réclamation
-  exports.rejeterReclamation = async (req, res) => {
+//Rejeter une réclamation
+exports.rejeterReclamation = async (req, res) => {
     try {
       const { id } = req.params;
       const { reponse } = req.body;
@@ -174,9 +174,7 @@ exports.traiterReclamation = async (req, res) => {
           res.status(500).json({ message: err.message });
       }
   
-  }
-  
-  
+};
 
 //Trouver les réclamations d'un utilisateur
 exports.getReclamationsByUser = async (req, res) => {
@@ -244,7 +242,7 @@ exports.getReclamationsRejetees = async (req, res) => {
     catch (err) {
         res.status(500).json({ message: err.message });
     }
-}
+};
 
 // Trouver les réclamations traitées par un utilisateur
 exports.getReclamationsTraiteesByUser = async (req, res) => {

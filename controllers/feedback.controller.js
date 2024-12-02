@@ -53,7 +53,10 @@ exports.createFeedback = async (req, res) => {
 exports.getFeedbackById = async (req, res) => {
   try {
     const id = req.params.id;
-    const feedback = await Feedback.findById(id);
+    const feedback = await Feedback.findById(id)
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
 
     if (!feedback) {
       return res.status(404).json({ message: 'Feedback non trouvé' });
@@ -68,7 +71,10 @@ exports.getFeedbackById = async (req, res) => {
 // Récupérer tous les feedbacks
 exports.getAllFeedbacks = async (req, res) => {
   try {
-    const feedbacks = await Feedback.find();
+    const feedbacks = await Feedback.find()
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
     res.status(200).json(feedbacks);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -86,7 +92,10 @@ exports.getFeedbacksByTrajet = async (req, res) => {
     }
 
     // Récupérer les feedbacks liés au trajet
-    const feedbacks = await Feedback.find({ idTrajet });
+    const feedbacks = await Feedback.find({ idTrajet })
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
   
     res.status(200).json(feedbacks);
     }
@@ -121,7 +130,10 @@ exports.getFeedbacksByPassager = async (req, res) => {
     const idPassager = req.params.id;
 
     // Récupérer les feedbacks liés à l'utilisateur
-    const feedbacks = await Feedback.find({ idPassager: idPassager });
+    const feedbacks = await Feedback.find({ idPassager: idPassager })
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
   
     res.status(200).json(feedbacks);
     }
@@ -129,7 +141,6 @@ exports.getFeedbacksByPassager = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 }
-
 
 //Récupérer les feedbacks d'un conducteur
 exports.getFeedbacksByConducteur = async (req, res) => {
@@ -143,7 +154,10 @@ exports.getFeedbacksByConducteur = async (req, res) => {
     }
 
     // Récupérer les feedbacks liés aux trajets du conducteur
-    const feedbacks = await Feedback.find({ idTrajet: { $in: trajets.map(trajet => trajet._id) } });
+    const feedbacks = await Feedback.find({ idTrajet: { $in: trajets.map(trajet => trajet._id) } })
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
   
     res.status(200).json(feedbacks);
     }

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const trajetSchema = mongoose.Schema({
   idConducteur: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Utilisateur',
     required: true,
   },
 

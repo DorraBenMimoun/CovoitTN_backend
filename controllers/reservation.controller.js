@@ -6,7 +6,6 @@ const Trajet = require('../models/trajet.model.js');
 exports.createReservation = async (req, res) => {
   try {
     const { idTrajet, idPassager, nbrPlacesReservees, prixTotal, messagePassager } = req.body;
-
     // Récupérer le trajet pour vérifier le nombre de places disponibles
     const trajet = await Trajet.findById(idTrajet);
 
@@ -43,7 +42,9 @@ exports.createReservation = async (req, res) => {
 exports.getReservation = async (req, res) => {
   try {
     const id = req.params.id;
-    const reservation = await Reservation.findById(id);
+    const reservation = await Reservation.findById(id)
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
 
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation non trouvée' });
@@ -58,7 +59,10 @@ exports.getReservation = async (req, res) => {
 // Récupérer toutes les réservations
 exports.getAllReservations = async (req, res) => {
   try {
-    const reservations = await Reservation.find();
+    const reservations = await Reservation.find()
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
     res.status(200).json(reservations);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -89,7 +93,10 @@ exports.getReservationsByConducteur = async (req, res) => {
   try {
     const idConducteur = req.params.id;
     const trajets = await Trajet.find({ idConducteur });
-    const reservations = await Reservation.find({ idTrajet: { $in: trajets.map(trajet => trajet._id) } });
+    const reservations = await Reservation.find({ idTrajet: { $in: trajets.map(trajet => trajet._id) } })
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
     res.status(200).json(reservations);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -172,11 +179,14 @@ exports.cancelReservation = async (req, res) => {
 exports.getReservationsByPassager = async (req, res) => {
   try {
     const idPassager = req.params.id;
-    
+
     /* if(idPassager !== req.user.id){
       return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
     }*/
-    const reservations = await Reservation.find({ idPassager });
+    const reservations = await Reservation.find({ idPassager })
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
     res.status(200).json(reservations);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -187,7 +197,10 @@ exports.getReservationsByPassager = async (req, res) => {
 exports.getReservationsByTrajet = async (req, res) => {
   try {
     const idTrajet = req.params.id;
-    const reservations = await Reservation.find({ idTrajet });
+    const reservations = await Reservation.find({ idTrajet })
+    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+
     res.status(200).json(reservations);
   }
   catch (err) {

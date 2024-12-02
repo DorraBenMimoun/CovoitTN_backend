@@ -1,64 +1,6 @@
 const Trajet = require('../models/trajet.model.js');
 const Reservation = require('../models/reservation.model.js'); 
 
-/*const axios = require('axios');
-
-async function getDistanceAndDurationFromOpenRouteService(pointDepart, pointArrivee) {
-    const apiKey = '5b3ce3597851110001cf6248c123d2b11bb649b1b84f8eda41f463d3'; // Remplacez par votre clé API OpenRouteService
-    const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${pointDepart.lng},${pointDepart.lat}&end=${pointArrivee.lng},${pointArrivee.lat}`;
-
-    try {
-        const response = await axios.get(url);
-        const data = response.data;
-        console.log("data: ", data);
-        console.log("features: ", data.features);
-
-        if (data.features && data.features.length > 0) {
-            const feature = data.features[0];
-            const distance = feature.properties.summary.distance / 1000; // Distance en km
-            const duration = feature.properties.summary.duration / 60;   // Durée en minutes
-            return { distance, duration };
-        } else {
-            throw new Error('Impossible de calculer la distance et la durée - Aucune donnée trouvée.');
-        }
-    } catch (error) {
-        console.error(`Erreur API: ${error.response ? error.response.status : 'Inconnu'} - ${error.message}`);
-        if (error.response && error.response.data) {
-            console.error(`Détails de l'erreur: ${JSON.stringify(error.response.data)}`);
-        }
-        throw new Error('Erreur lors de la communication avec l\'API OpenRouteService.');
-    }
-}
-*/
-/*exports.createTrajet2 = async (req, res) => {
-    try {
-        const { pointDepart, pointArrivee } = req.body;
-        console.log("point depart: ", pointDepart);
-        console.log("point arrivee: ", pointArrivee);
-
-        if (!pointDepart || !pointDepart.lat || !pointDepart.lng) {
-            return res.status(400).json({ message: "Les coordonnées du point de départ sont requises." });
-        }
-
-        if (!pointArrivee || !pointArrivee.lat || !pointArrivee.lng) {
-            return res.status(400).json({ message: "Les coordonnées du point d'arrivée sont requises." });
-        }
-
-        // Obtenir la distance et la durée à partir de OpenRouteService
-        const { distance, duration } = await getDistanceAndDurationFromOpenRouteService(pointDepart, pointArrivee);
-
-        // Ajouter les valeurs calculées au corps de la requête
-        req.body.distance = distance;
-        req.body.duree = duration;
-
-        // Créer et enregistrer le trajet
-        const trajet = await Trajet.create(req.body);
-        res.status(200).json(trajet);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
-*/
 
 // Create and Save a new Trajet
 exports.createTrajet = async (req, res) => {
@@ -86,7 +28,7 @@ exports.createTrajet = async (req, res) => {
 // Retrieve all Trajets from the database.
 exports.getTrajets = async (req, res) => {
   try {
-    const trajets = await Trajet.find();
+    const trajets = await Trajet.find().populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
     res.status(200).json(trajets);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -96,7 +38,7 @@ exports.getTrajets = async (req, res) => {
 exports.getTrajetById = async (req, res) => {
   try {
     const id = req.params.id;
-    const trajet = await Trajet.findById(id);
+    const trajet = await Trajet.findById(id).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
     res.status(200).json(trajet);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -253,10 +195,7 @@ exports.getTrajetsByConducteur = async (req, res) => {
   }
 };
 
-// Function to normalize the terms (remove special characters like hyphens, underscores, etc.)
-function normalizeTerm(term) {
-  return term.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); // Retire les caractères non alphanumériques et met en minuscule
-}
+
 
 // Function to normalize the terms (remove special characters like hyphens, underscores, etc.)
 function normalizeTerm(term) {
@@ -311,7 +250,7 @@ exports.filterTrajets = async (req, res) => {
     console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
 
     // Exécution de la requête avec les filtres construits
-    const trajets = await Trajet.find(filtre);
+    const trajets = await Trajet.find(filtre).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
 
     // Retour des trajets filtrés
     res.status(200).json(trajets);
@@ -334,20 +273,28 @@ exports.quickSearch = async (req, res) => {
       return res.status(400).json({ message: "Le terme de recherche est obligatoire." });
     }
 
-    // Normalisation du terme de recherche
-    const regexSearchTerm = createRegexForTerm(searchTerm);
+     // Génération de l'expression régulière
+     const regexSearchTerm = createRegexForTerm(searchTerm);
 
-    // Construction dynamique de la requête de recherche
+     console.log('Expression régulière générée pour le terme de recherche:', regexSearchTerm);
+ 
+     if (!regexSearchTerm) {
+       return res.status(400).json({ message: "Expression régulière invalide." });
+     }
+
+     // Construction des filtres
     const filtre = {
-      'pointArrivee.terms': { $elemMatch: { value: { $regex: regexSearchTerm } } },
-      'pointDepart.terms': { $elemMatch: { value: { $regex: regexSearchTerm } } }
+      $or: [
+        { 'pointArrivee.terms': { $elemMatch: { value: regexSearchTerm } } },
+        { 'pointDepart.terms': { $elemMatch: { value: regexSearchTerm } } },
+      ],
     };
 
     console.log('Filtres utilisés pour la recherche rapide:', filtre);
     console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
 
     // Exécution de la requête avec le filtre construit
-    const trajets = await Trajet.find(filtre);
+    const trajets = await Trajet.find(filtre).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
 
     // Retour des résultats trouvés
     res.status(200).json(trajets);
@@ -357,11 +304,6 @@ exports.quickSearch = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
-
-
-
 
 const PRIX_ESSENCE = 2.525; // Prix le litre d'essence en dinar
 const DISTANCE_PAR_LITRE = 20; // Distance en km par litre d'essence

@@ -14,7 +14,7 @@ const { authentification } = require('../middelware/auth_middelware');
 // Créer une nouvelle réservation
 /**
  * @swagger
- * /reservations/create:
+ * /reservations:
  *   post:
  *     summary: Créer une nouvelle réservation
  *     tags:

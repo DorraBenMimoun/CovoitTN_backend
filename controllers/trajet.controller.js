@@ -1,6 +1,5 @@
 const Trajet = require('../models/trajet.model.js');
-const Reservation = require('../models/reservation.model.js'); 
-
+const Reservation = require('../models/reservation.model.js');
 
 // Create and Save a new Trajet
 exports.createTrajet = async (req, res) => {
@@ -28,7 +27,10 @@ exports.createTrajet = async (req, res) => {
 // Retrieve all Trajets from the database.
 exports.getTrajets = async (req, res) => {
   try {
-    const trajets = await Trajet.find().populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    const trajets = await Trajet.find().populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
     res.status(200).json(trajets);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -38,7 +40,10 @@ exports.getTrajets = async (req, res) => {
 exports.getTrajetById = async (req, res) => {
   try {
     const id = req.params.id;
-    const trajet = await Trajet.findById(id).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    const trajet = await Trajet.findById(id).populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
     res.status(200).json(trajet);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -74,7 +79,6 @@ exports.updateTrajet2 = async (req, res) => {
   }
 };
 
-
 // Update a Trajet by the id in the request
 exports.updateTrajet = async (req, res) => {
   try {
@@ -83,7 +87,7 @@ exports.updateTrajet = async (req, res) => {
 
     // Récupérer le trajet actuel
     const trajet = await Trajet.findById(id);
-    console.log('ancien trajet:',trajet);
+    console.log('ancien trajet:', trajet);
 
     if (!trajet) {
       return res.status(404).json({ message: 'Trajet non trouvé' });
@@ -93,26 +97,48 @@ exports.updateTrajet = async (req, res) => {
     const reservations = await Reservation.find({ idTrajet: id });
 
     // 2- Calculer le nombre de places restantes
-    const nbrPlacesReservees = reservations.reduce((sum, res) => sum + res.nbrPlacesReservees, 0);
+    const nbrPlacesReservees = reservations.reduce(
+      (sum, res) => sum + res.nbrPlacesReservees,
+      0,
+    );
     const placesRestantes = trajet.placesDispo - nbrPlacesReservees;
 
     // Vérification si le nombre de places disponibles mis à jour est inférieur à 0 ou dépasse le nombre de réservations existantes
-    if (updatedData.placesDispo < nbrPlacesReservees||updatedData.placesDispo < 0) {
+    if (
+      updatedData.placesDispo < nbrPlacesReservees ||
+      updatedData.placesDispo < 0
+    ) {
       return res.status(400).json({ message: 'Nombre de places invalides.' });
     }
 
     // Vérification des modifications interdites si des réservations existent
-    const restrictedFields = ['prix', 'placesDispo', 'heureDepart', 'destination', 'depart'];
-    if (reservations.length > 0 && restrictedFields.some(field => updatedData[field] !== undefined && updatedData[field] !== trajet[field])) {
-      return res.status(400).json({ message: 'Impossible de modifier certaines informations car des réservations existent.' });
+    const restrictedFields = [
+      'prix',
+      'placesDispo',
+      'heureDepart',
+      'destination',
+      'depart',
+    ];
+    if (
+      reservations.length > 0 &&
+      restrictedFields.some(
+        (field) =>
+          updatedData[field] !== undefined &&
+          updatedData[field] !== trajet[field],
+      )
+    ) {
+      return res
+        .status(400)
+        .json({
+          message:
+            'Impossible de modifier certaines informations car des réservations existent.',
+        });
     }
 
     // Vérifier si le prix est dans une plage valide si la destination ou le départ est mis à jour
     /*if ((updatedData.destination || updatedData.depart) && (updatedData.prix < trajet.prixMin || updatedData.prix > trajet.prixMax)) {
       return res.status(400).json({ message: 'Le prix est hors de la plage autorisée.' });
     }*/
-
- 
 
     // Vérification des champs qui nécessitent une notification aux passagers
     /*const notificationFields = ['fumeur', 'animaux', 'filleUniquement', 'maxPassagersArriere', 'marqueVoiture', 'couleurVoiture'];
@@ -123,7 +149,9 @@ exports.updateTrajet = async (req, res) => {
     }
 */
     // Mettre à jour le trajet
-    const updatedTrajet = await Trajet.findByIdAndUpdate(id, updatedData, { new: true });
+    const updatedTrajet = await Trajet.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
 
     res.status(200).json(updatedTrajet);
   } catch (err) {
@@ -131,30 +159,29 @@ exports.updateTrajet = async (req, res) => {
   }
 };
 
-  
 // Delete a Trajet with the specified id in the request
 exports.deleteTrajet = async (req, res) => {
   try {
     const id = req.params.id;
     const trajet = await Trajet.findByIdAndDelete(id);
     if (!trajet) {
-      res.status(404).json({ message: 'Trajet not found' });
+      return res.status(404).json({ message: 'Trajet not found' });
     }
 
     // TODO : Si trajet a des reservations : annuler les reservation, informer les users
 
     // Recuperer le trajet et l'envoyer a check if is authorized avant de le supprimer
-    checkIfIsAuthorized(req, trajet, res);
+    // checkIfIsAuthorized(req, trajet, res);
 
-    res.status(200).json(trajet); // Non
+    return res.status(200).json(trajet); // Non
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
 const checkIfIsAuthorized = (req, trajet, res) => {
   if (!req.user || trajet.idConducteur.toString() != req.user._id.toString()) {
-    res
+    return res
       .status(401)
       .json({ message: 'You are not authorized to do this action' });
   }
@@ -170,13 +197,14 @@ exports.deleteAllTrajets = async (req, res) => {
   }
 };
 
-
 //get all trajets by passager
 exports.getTrajetsByPassager = async (req, res) => {
   try {
     const id = req.params.id;
     const reservations = await Reservation.find({ idPassager: id });
-    const trajets = await Trajet.find({ _id: { $in: reservations.map(res => res.idTrajet) } });
+    const trajets = await Trajet.find({
+      _id: { $in: reservations.map((res) => res.idTrajet) },
+    });
     res.status(200).json(trajets);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -187,15 +215,12 @@ exports.getTrajetsByPassager = async (req, res) => {
 exports.getTrajetsByConducteur = async (req, res) => {
   try {
     const id = req.params.id;
-    const trajets = await Trajet.find
-    ({ idConducteur: id });
+    const trajets = await Trajet.find({ idConducteur: id });
     res.status(200).json(trajets);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 // Function to normalize the terms (remove special characters like hyphens, underscores, etc.)
 function normalizeTerm(term) {
@@ -214,24 +239,39 @@ exports.filterTrajets = async (req, res) => {
     console.log('Requête reçue avec paramètres:', req.query);
 
     // Récupération des critères de filtrage depuis les paramètres de la requête
-    const { pointArriveeTerm, pointDepartTerm, fumeur, animaux, filleUniquement, placesDispo } = req.query;
+    const {
+      pointArriveeTerm,
+      pointDepartTerm,
+      fumeur,
+      animaux,
+      filleUniquement,
+      placesDispo,
+    } = req.query;
 
     // Vérification de la présence du terme du point d'arrivée (obligatoire)
     if (!pointArriveeTerm) {
-      return res.status(400).json({ message: "Le terme du point d'arrivée est obligatoire." });
+      return res
+        .status(400)
+        .json({ message: "Le terme du point d'arrivée est obligatoire." });
     }
 
     // Normalisation des termes (supprime les tirets, underscores, etc.)
     const regexPointArriveeTerm = createRegexForTerm(pointArriveeTerm);
-    const regexPointDepartTerm = pointDepartTerm ? createRegexForTerm(pointDepartTerm) : null;
+    const regexPointDepartTerm = pointDepartTerm
+      ? createRegexForTerm(pointDepartTerm)
+      : null;
 
     // Construction dynamique de la requête de filtrage
     const filtre = {
-      'pointArrivee.terms': { $elemMatch: { value: { $regex: regexPointArriveeTerm } } },
+      'pointArrivee.terms': {
+        $elemMatch: { value: { $regex: regexPointArriveeTerm } },
+      },
     };
 
     if (regexPointDepartTerm) {
-      filtre['pointDepart.terms'] = { $elemMatch: { value: { $regex: regexPointDepartTerm } } };
+      filtre['pointDepart.terms'] = {
+        $elemMatch: { value: { $regex: regexPointDepartTerm } },
+      };
     }
     if (fumeur !== undefined) {
       filtre.fumeur = fumeur === 'true'; // Convertir en booléen
@@ -250,7 +290,10 @@ exports.filterTrajets = async (req, res) => {
     console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
 
     // Exécution de la requête avec les filtres construits
-    const trajets = await Trajet.find(filtre).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    const trajets = await Trajet.find(filtre).populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
 
     // Retour des trajets filtrés
     res.status(200).json(trajets);
@@ -270,19 +313,26 @@ exports.quickSearch = async (req, res) => {
 
     // Vérification que le terme de recherche est présent
     if (!searchTerm) {
-      return res.status(400).json({ message: "Le terme de recherche est obligatoire." });
+      return res
+        .status(400)
+        .json({ message: 'Le terme de recherche est obligatoire.' });
     }
 
-     // Génération de l'expression régulière
-     const regexSearchTerm = createRegexForTerm(searchTerm);
+    // Génération de l'expression régulière
+    const regexSearchTerm = createRegexForTerm(searchTerm);
 
-     console.log('Expression régulière générée pour le terme de recherche:', regexSearchTerm);
- 
-     if (!regexSearchTerm) {
-       return res.status(400).json({ message: "Expression régulière invalide." });
-     }
+    console.log(
+      'Expression régulière générée pour le terme de recherche:',
+      regexSearchTerm,
+    );
 
-     // Construction des filtres
+    if (!regexSearchTerm) {
+      return res
+        .status(400)
+        .json({ message: 'Expression régulière invalide.' });
+    }
+
+    // Construction des filtres
     const filtre = {
       $or: [
         { 'pointArrivee.terms': { $elemMatch: { value: regexSearchTerm } } },
@@ -294,7 +344,10 @@ exports.quickSearch = async (req, res) => {
     console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
 
     // Exécution de la requête avec le filtre construit
-    const trajets = await Trajet.find(filtre).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    const trajets = await Trajet.find(filtre).populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
 
     // Retour des résultats trouvés
     res.status(200).json(trajets);

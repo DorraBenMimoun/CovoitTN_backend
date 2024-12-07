@@ -29,7 +29,7 @@ exports.getTrajets = async (req, res) => {
   try {
     const trajets = await Trajet.find().populate(
       'idConducteur',
-      'nom prenom email photo sexe compteActif phone',
+      'nom prenom email photo sexe compteActif phone ',
     );
     res.status(200).json(trajets);
   } catch (err) {
@@ -49,35 +49,6 @@ exports.getTrajetById = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-// Update a Trajet by the id in the request
-exports.updateTrajet2 = async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    // VALIDATION DES CHAMPS
-
-    // TODO : 1- Récuperer les reservations du trajet
-    //        2- Calculer le nombre de places restantes
-    //        3- Mettre à jour le trajet avec le nombre de places restantes
-
-    // Si nbr place dispo update par user  < 0 ou > reservation tu renvoie erreur
-
-    // Prix entre min et max <= Recalculer le prix si update destination or depart
-
-    // TODO : SI deja reservation renvoyer erreur SI update prix ou nbr place dispo ou heure ou destination ou depart
-
-    // TODO : Si update fumeur, animaux, fille uniquement, max passager arriere, marque voiture, couleur voiture informer les passagers
-    const trajet = await Trajet.findByIdAndUpdate(id, req.body, { new: true });
-
-    if (!trajet) {
-      res.status(404).json({ message: 'Trajet not found' });
-    }
-    const updatedTrajet = await Trajet.findById(id);
-    res.status(200).json(updatedTrajet);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
 
 // Update a Trajet by the id in the request
 exports.updateTrajet = async (req, res) => {
@@ -87,7 +58,6 @@ exports.updateTrajet = async (req, res) => {
 
     // Récupérer le trajet actuel
     const trajet = await Trajet.findById(id);
-    console.log('ancien trajet:', trajet);
 
     if (!trajet) {
       return res.status(404).json({ message: 'Trajet non trouvé' });
@@ -114,7 +84,6 @@ exports.updateTrajet = async (req, res) => {
     // Vérification des modifications interdites si des réservations existent
     const restrictedFields = [
       'prix',
-      'placesDispo',
       'heureDepart',
       'destination',
       'depart',
@@ -159,21 +128,43 @@ exports.updateTrajet = async (req, res) => {
   }
 };
 
-// Delete a Trajet with the specified id in the request
+// Delete a Trajet or archive it if there are reservations
 exports.deleteTrajet = async (req, res) => {
   try {
     const id = req.params.id;
-    const trajet = await Trajet.findByIdAndDelete(id);
+    
+    // Trouver le trajet par son ID
+    const trajet = await Trajet.findById(id);
+    
     if (!trajet) {
-      return res.status(404).json({ message: 'Trajet not found' });
+      return res.status(404).json({ message: 'Trajet non trouvé' });
     }
 
-    // TODO : Si trajet a des reservations : annuler les reservation, informer les users
+    // Vérifier si des réservations existent pour ce trajet
+    const reservations = await Reservation.find({ idTrajet: trajet._id });
 
-    // Recuperer le trajet et l'envoyer a check if is authorized avant de le supprimer
-    // checkIfIsAuthorized(req, trajet, res);
+    if (reservations.length > 0) {
+      console.log("trajet avant archive",trajet);
+      // Si des réservations existent, on archive le trajet et on annule les réservations
+      trajet.archieved = true;
 
-    return res.status(200).json(trajet); // Non
+      console.log('Trajet archivé:', trajet.archived);
+      await trajet.save(); // Sauvegarder le trajet avec l'attribut 'archived' mis à jour
+      console.log("trajet aprs archive",trajet);
+
+      // Annuler toutes les réservations associées au trajet
+      for (let i = 0; i < reservations.length; i++) {
+        reservations[i].etat = 'Annulée'; // Modifier l'état des réservations à 'Annulée'
+        await reservations[i].save();
+      }
+
+      return res.status(200).json({ message: 'Trajet archivé et réservations annulées', trajet });
+    } else {
+      // Si aucune réservation n'existe, supprimer le trajet
+      await Trajet.findByIdAndDelete(id);
+      return res.status(200).json({ message: 'Trajet supprimé avec succès' });
+    }
+
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -227,136 +218,219 @@ function normalizeTerm(term) {
   return term.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); // Retire les caractères non alphanumériques et met en minuscule
 }
 
-// Function to create a regex that ignores special characters between letters
 function createRegexForTerm(term) {
-  const normalizedTerm = normalizeTerm(term);
-  // Create a regex that matches the normalized term with optional characters between the letters
-  return new RegExp(normalizedTerm.split('').join('[^a-zA-Z0-9]*'), 'i'); // 'i' for case-insensitive
+  if (!term) return null;
+
+  // Crée une expression régulière insensible à la casse
+  const regex = new RegExp(term.replace(/[^\w\s]/g, ''), 'i'); // 'i' pour insensible à la casse
+
+  return regex;
 }
 
 exports.filterTrajets = async (req, res) => {
   try {
     console.log('Requête reçue avec paramètres:', req.query);
 
-    // Récupération des critères de filtrage depuis les paramètres de la requête
-    const {
-      pointArriveeTerm,
-      pointDepartTerm,
-      fumeur,
-      animaux,
-      filleUniquement,
-      placesDispo,
-    } = req.query;
+    const { pointArrivee, pointDepart, fumeur, animaux, filleUniquement, placesDispo, date } = req.query;
 
-    // Vérification de la présence du terme du point d'arrivée (obligatoire)
-    if (!pointArriveeTerm) {
-      return res
-        .status(400)
-        .json({ message: "Le terme du point d'arrivée est obligatoire." });
+    // Vérifier que le point d'arrivée est fourni
+    if (!pointArrivee) {
+      return res.status(400).json({ message: "Le point d'arrivée est obligatoire." });
     }
 
-    // Normalisation des termes (supprime les tirets, underscores, etc.)
-    const regexPointArriveeTerm = createRegexForTerm(pointArriveeTerm);
-    const regexPointDepartTerm = pointDepartTerm
-      ? createRegexForTerm(pointDepartTerm)
-      : null;
+    // Expression régulière pour la recherche dans les descriptions ou les termes
+    const regexPointArrivee = new RegExp(pointArrivee.replace(/[^\w\s]/g, ''), 'i');
+    const regexPointDepart = pointDepart ? new RegExp(pointDepart.replace(/[^\w\s]/g, ''), 'i') : null;
 
-    // Construction dynamique de la requête de filtrage
+    // Construction des filtres
     const filtre = {
-      'pointArrivee.terms': {
-        $elemMatch: { value: { $regex: regexPointArriveeTerm } },
-      },
+      $and: [
+        {
+          $or: [
+            { 'pointArrivee.description': { $regex: regexPointArrivee } },
+            { 'pointArrivee.terms': { $elemMatch: { value: { $regex: regexPointArrivee } } } },
+          ],
+        },
+      ],
     };
 
-    if (regexPointDepartTerm) {
-      filtre['pointDepart.terms'] = {
-        $elemMatch: { value: { $regex: regexPointDepartTerm } },
-      };
+    // Ajouter le filtre pour le point de départ si spécifié
+    if (pointDepart) {
+      filtre.$and.push({
+        $or: [
+          { 'pointDepart.description': { $regex: regexPointDepart } },
+          { 'pointDepart.terms': { $elemMatch: { value: { $regex: regexPointDepart } } } },
+        ],
+      });
     }
+
+    // Ajout du filtre de date
+    const currentDate = new Date();
+    if (date) {
+      // Convertir la date de la requête en début et fin de journée
+      const startOfDay = new Date(date);
+      startOfDay.setUTCHours(0, 0, 0, 0); // Début de la journée
+      const endOfDay = new Date(date);
+      endOfDay.setUTCHours(23, 59, 59, 999); // Fin de la journée
+
+      filtre.$and.push({ dateDepart: { $gte: startOfDay, $lte: endOfDay } });
+    } else {
+      filtre.$and.push({ dateDepart: { $gte: currentDate } }); // Recherche des trajets futurs
+    }
+
+    // Ajout des autres critères de filtrage
     if (fumeur !== undefined) {
-      filtre.fumeur = fumeur === 'true'; // Convertir en booléen
+      filtre.$and.push({ fumeur: fumeur === 'true' });
     }
     if (animaux !== undefined) {
-      filtre.animaux = animaux === 'true'; // Convertir en booléen
+      filtre.$and.push({ animaux: animaux === 'true' });
     }
     if (filleUniquement !== undefined) {
-      filtre.filleUniquement = filleUniquement === 'true'; // Convertir en booléen
+      filtre.$and.push({ filleUniquement: filleUniquement === 'true' });
     }
     if (placesDispo) {
-      filtre.placesDispo = { $gte: Number(placesDispo) }; // Vérifie que les places disponibles sont suffisantes
+      filtre.$and.push({ placesDispo: { $gte: Number(placesDispo) } });
     }
 
-    console.log('Filtres utilisés:', filtre);
-    console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
+    console.log('Filtres utilisés:', JSON.stringify(filtre, null, 2));
 
-    // Exécution de la requête avec les filtres construits
+    // Exécution de la requête avec les filtres
     const trajets = await Trajet.find(filtre).populate(
       'idConducteur',
       'nom prenom email photo sexe compteActif phone',
     );
 
-    // Retour des trajets filtrés
     res.status(200).json(trajets);
   } catch (err) {
-    // Gestion des erreurs
     console.error('Erreur lors du filtrage des trajets:', err);
     res.status(500).json({ message: err.message });
   }
 };
 
+
 exports.quickSearch = async (req, res) => {
   try {
     console.log('Requête reçue avec paramètre de recherche:', req.query);
 
-    // Récupération du terme de recherche depuis les paramètres de la requête
-    const { searchTerm } = req.query;
+    const { text } = req.query;
 
-    // Vérification que le terme de recherche est présent
-    if (!searchTerm) {
+    // Vérification que le paramètre de recherche est présent
+    if (!text) {
       return res
         .status(400)
-        .json({ message: 'Le terme de recherche est obligatoire.' });
+        .json({ message: 'Le texte de recherche est obligatoire.' });
     }
 
-    // Génération de l'expression régulière
-    const regexSearchTerm = createRegexForTerm(searchTerm);
+    const regexText = new RegExp(text, 'i'); // Expression régulière insensible à la casse
 
-    console.log(
-      'Expression régulière générée pour le terme de recherche:',
-      regexSearchTerm,
-    );
-
-    if (!regexSearchTerm) {
-      return res
-        .status(400)
-        .json({ message: 'Expression régulière invalide.' });
-    }
-
-    // Construction des filtres
-    const filtre = {
+    // Recherche initiale dans les descriptions
+    const trajets = await Trajet.find({
       $or: [
-        { 'pointArrivee.terms': { $elemMatch: { value: regexSearchTerm } } },
-        { 'pointDepart.terms': { $elemMatch: { value: regexSearchTerm } } },
+        { 'pointDepart.description': regexText },
+        { 'pointArrivee.description': regexText },
       ],
-    };
+    }).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
 
-    console.log('Filtres utilisés pour la recherche rapide:', filtre);
-    console.log('Filtres utilisés 2:', JSON.stringify(filtre, null, 2));
+    // Si des trajets sont trouvés dans les descriptions, extraire les descriptions correspondantes
+    if (trajets.length > 0) {
+      const uniqueDescriptions = [
+        ...new Set(
+          trajets.flatMap((trajet) => [
+            trajet.pointDepart.description,
+            trajet.pointArrivee.description,
+          ]),
+        ),
+      ];
+      return res.status(200).json(uniqueDescriptions);
+    }
 
-    // Exécution de la requête avec le filtre construit
-    const trajets = await Trajet.find(filtre).populate(
-      'idConducteur',
-      'nom prenom email photo sexe compteActif phone',
-    );
+    // Si aucune correspondance n'est trouvée dans les descriptions, chercher dans les termes
+    const trajetsByTerms = await Trajet.find({
+      $or: [
+        { 'pointDepart.terms': { $elemMatch: { value: regexText } } },
+        { 'pointArrivee.terms': { $elemMatch: { value: regexText } } },
+      ],
+    }).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
 
-    // Retour des résultats trouvés
-    res.status(200).json(trajets);
+    // Extraire les termes uniques correspondants
+    const uniqueTerms = [
+      ...new Set(
+        trajetsByTerms.flatMap((trajet) =>
+          [
+            ...(trajet.pointDepart.terms || []).map((term) => term.value),
+            ...(trajet.pointArrivee.terms || []).map((term) => term.value),
+          ].filter((value) => regexText.test(value)), // Filtrer les termes correspondant au texte
+        ),
+      ),
+    ];
+
+    // Retourner le tableau de résultats uniques (descriptions ou termes)
+    res.status(200).json(uniqueTerms);
   } catch (err) {
-    // Gestion des erreurs
     console.error('Erreur lors de la recherche rapide:', err);
     res.status(500).json({ message: err.message });
   }
 };
+
+
+exports.getTrajetsBySamePoints = async (req, res) => {
+  try {
+    const { pointDepart, pointArrivee } = req.body;
+
+    if (!pointDepart || !pointArrivee) {
+      return res.status(400).json({ message: "Les points de départ et d'arrivée sont requis." });
+    }
+
+    console.log('Recherche des trajets avec les mêmes points:', { pointDepart, pointArrivee });
+
+    // Étape 1 : Recherche avec la description exacte
+    let trajets = await Trajet.find({
+      'pointDepart.description': pointDepart.description,
+      'pointArrivee.description': pointArrivee.description,
+    }).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+
+    // Si des trajets correspondants sont trouvés, on les retourne immédiatement
+    if (trajets.length > 0) {
+      return res.status(200).json(trajets);
+    }
+
+    console.log('Aucun trajet trouvé avec les descriptions exactes, recherche avec les avant-derniers termes...');
+
+    // Étape 2 : Recherche avec les avant-derniers termes
+    const avantDernierTermDepart = pointDepart.terms[pointDepart.terms.length - 2]?.value;
+    const avantDernierTermArrivee = pointArrivee.terms[pointArrivee.terms.length - 2]?.value;
+
+    if (!avantDernierTermDepart || !avantDernierTermArrivee) {
+      return res.status(400).json({ message: "Les avant-derniers termes des points sont manquants." });
+    }
+
+    trajets = await Trajet.find().populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone'
+    );
+
+    // Filtrage des trajets sur les avant-derniers termes
+    const filteredTrajets = trajets.filter((trajet) => {
+      const trajetDepartTerms = trajet.pointDepart.terms;
+      const trajetArriveeTerms = trajet.pointArrivee.terms;
+
+      const trajetAvantDernierDepart = trajetDepartTerms[trajetDepartTerms.length - 2]?.value;
+      const trajetAvantDernierArrivee = trajetArriveeTerms[trajetArriveeTerms.length - 2]?.value;
+
+      return (
+        trajetAvantDernierDepart === avantDernierTermDepart &&
+        trajetAvantDernierArrivee === avantDernierTermArrivee
+      );
+    });
+
+    // Retourner les trajets filtrés
+    res.status(200).json(filteredTrajets);
+  } catch (err) {
+    console.error('Erreur lors de la recherche des trajets:', err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 const PRIX_ESSENCE = 2.525; // Prix le litre d'essence en dinar
 const DISTANCE_PAR_LITRE = 20; // Distance en km par litre d'essence

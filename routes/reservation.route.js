@@ -197,7 +197,6 @@ router.get('/conducteur/:id', reservationController.getReservationsByConducteur)
  */
 router.get('/trajet/:id', reservationController.getReservationsByTrajet);
 
-// Récupérer toutes les réservations d'un passager
 /**
  * @swagger
  * /reservations/passager/{id}:
@@ -228,12 +227,14 @@ router.get('/trajet/:id', reservationController.getReservationsByTrajet);
  */
 router.get('/passager/:id', reservationController.getReservationsByPassager);
 
+router.get('/passager/:id', reservationController.getReservationsByPassager);
+
 //accepter une reservation
 /**
  * @swagger
  * /reservations/accepter/{id}:
  *   put:
- *     summary: Accepter une réservation
+ *     summary: Accepter une réservation et fusionner avec une réservation existante si nécessaire
  *     tags:
  *       - Réservations
  *     parameters:
@@ -245,7 +246,17 @@ router.get('/passager/:id', reservationController.getReservationsByPassager);
  *           type: string
  *     responses:
  *       200:
- *         description: Réservation acceptée avec succès
+ *         description: Réservation acceptée avec succès et fusionnée si applicable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Message de confirmation de l'acceptation et de la fusion
+ *                 reservation:
+ *                   $ref: '#/components/schemas/Reservation'
  *       404:
  *         description: Réservation non trouvée
  *       500:

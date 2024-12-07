@@ -22,7 +22,7 @@ const reservationSchema = mongoose.Schema({
   etat: {
     type: String,
     required: true,
-    enum: ['En attente', 'Acceptée', 'Refusée'],
+    enum: ['En attente', 'Acceptée', 'Refusée','Annulée'],
     default: 'En attente'
   },
   prixTotal: {

@@ -44,7 +44,7 @@ exports.getReservation = async (req, res) => {
     const id = req.params.id;
     const reservation = await Reservation.findById(id)
     .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
-    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo archieved');
 
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation non trouvée' });
@@ -61,7 +61,7 @@ exports.getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find()
     .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
-    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo archieved');
 
     res.status(200).json(reservations);
   } catch (err) {
@@ -95,7 +95,7 @@ exports.getReservationsByConducteur = async (req, res) => {
     const trajets = await Trajet.find({ idConducteur });
     const reservations = await Reservation.find({ idTrajet: { $in: trajets.map(trajet => trajet._id) } })
     .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
-    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo archieved');
 
     res.status(200).json(reservations);
   } catch (err) {
@@ -107,17 +107,35 @@ exports.getReservationsByConducteur = async (req, res) => {
 exports.acceptReservation = async (req, res) => {
   try {
     const id = req.params.id;
-    const reservation = await Reservation.findById(id);
+    const reservation = await Reservation.findById(id).populate('idTrajet');  // Nous populons le trajet pour avoir accès aux informations nécessaires
 
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation non trouvée' });
     }
-    /*const trajet = await Trajet.findById(reservation.idTrajet);
-    
-    if(trajet.idConducteur !== req.user.id){
-      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
-    }*/
 
+    // Vérifier si un passager a réservé le même trajet et a une réservation acceptée
+    const otherReservation = await Reservation.findOne({
+      idPassager: reservation.idPassager,
+      idTrajet: reservation.idTrajet._id,
+      etat: 'Acceptée',
+      _id: { $ne: id }  // On exclut la réservation actuelle
+    });
+
+    if (otherReservation) {
+      // Si une réservation acceptée du même passager pour le même trajet existe, on fusionne les réservations
+      reservation.nbrPlacesReservees += otherReservation.nbrPlacesReservees;
+      reservation.prixTotal += otherReservation.prixTotal;
+
+      // Supprimer la deuxième réservation
+      await Reservation.findByIdAndDelete(otherReservation._id);
+
+      // Sauvegarder les modifications de la première réservation
+      await reservation.save();
+
+      return res.status(200).json({ message: 'Réservation mise à jour et fusionnée avec la réservation existante', reservation });
+    }
+
+    // Si aucune réservation existante à fusionner, accepter la réservation
     reservation.etat = 'Acceptée';
     await reservation.save();
 
@@ -175,23 +193,39 @@ exports.cancelReservation = async (req, res) => {
   }
 };
 
-//get all reservations by passager
 exports.getReservationsByPassager = async (req, res) => {
   try {
     const idPassager = req.params.id;
 
-    /* if(idPassager !== req.user.id){
-      return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à annuler cette réservation' });
-    }*/
+    // Récupérer les réservations du passager
     const reservations = await Reservation.find({ idPassager })
-    .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
-    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+      .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo archieved') // Peupler les détails du trajet
+      .lean(); // Utiliser lean pour transformer les documents Mongoose en objets JS simples
+
+    // Ajouter la liste des autres passagers ayant une réservation acceptée sur le même trajet
+    for (let reservation of reservations) {
+      if (reservation.idTrajet) {
+        // Rechercher les autres passagers ayant une réservation acceptée sur le même trajet
+        const autresReservations = await Reservation.find({
+          idTrajet: reservation.idTrajet._id,
+          etat: 'Acceptée',
+          idPassager: { $ne: idPassager }, // Exclure le passager actuel
+        })
+          .populate('idPassager', 'nom prenom email photo') // Peupler les détails des autres passagers
+          .select('idPassager etat'); // Sélectionner uniquement les champs nécessaires
+
+        // Ajouter les autres passagers à la réservation actuelle
+        reservation.autresPassagers = autresReservations.map(res => res.idPassager);
+      }
+    }
 
     res.status(200).json(reservations);
   } catch (err) {
+    console.error('Erreur lors de la récupération des réservations:', err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 //get all reservations by trajet
 exports.getReservationsByTrajet = async (req, res) => {
@@ -199,7 +233,7 @@ exports.getReservationsByTrajet = async (req, res) => {
     const idTrajet = req.params.id;
     const reservations = await Reservation.find({ idTrajet })
     .populate('idPassager', 'nom prenom email photo sexe compteActif phone')
-    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo');
+    .populate('idTrajet', 'pointDepart pointArrivee dateDepart heureDepart prixTrajet placesDispo archieved');
 
     res.status(200).json(reservations);
   }

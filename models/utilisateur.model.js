@@ -46,9 +46,11 @@ const utilisateurSchema = mongoose.Schema(
     },
     pieceIdentite: {
       type: String,
+      required: false,
     },
     permis: {
       type: String,
+      required: false,
     },
     dateFinBannissement: {
       type: Date,

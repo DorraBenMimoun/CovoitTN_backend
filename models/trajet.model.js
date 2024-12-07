@@ -69,6 +69,11 @@ const trajetSchema = mongoose.Schema({
     },
     required: true,
   },
+  archieved: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
 });
 const Trajet = mongoose.model('Trajet', trajetSchema);
 module.exports = Trajet;

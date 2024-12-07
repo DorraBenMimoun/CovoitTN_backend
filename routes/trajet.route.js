@@ -90,7 +90,7 @@ router.put('/:id', TrajetController.updateTrajet);
  * @swagger
  * /trajets/{id}:
  *   delete:
- *     summary: Supprime un trajet par ID
+ *     summary: Supprime ou archive un trajet par ID
  *     tags:
  *       - Trajets
  *     parameters:
@@ -102,7 +102,7 @@ router.put('/:id', TrajetController.updateTrajet);
  *           type: string
  *     responses:
  *       200:
- *         description: Trajet supprimé avec succès
+ *         description: Trajet archivé avec succès et réservations annulées si des réservations existent, ou trajet supprimé si aucune réservation n'existe
  *       404:
  *         description: Trajet non trouvé
  *       500:
@@ -140,46 +140,57 @@ router.get('/estimation/PrixMaxMin/:distance',TrajetController.getEstimationPrix
  * @swagger
  * /trajets/filter/Trajets:
  *   get:
- *     summary: Filtre les trajets en fonction du point d'arrivée et d'autres critères optionnels
+ *     summary: Filtre les trajets en fonction du point d'arrivée, du point de départ (optionnel), et d'autres critères.
  *     tags:
  *       - Trajets
  *     parameters:
  *       - in: query
- *         name: pointArriveeTerm
+ *         name: pointArrivee
  *         required: true
  *         schema:
  *           type: string
- *         description: Terme du point d'arrivée à rechercher (obligatoire, insensible à la casse)
+ *         description: Texte à rechercher pour le point d'arrivée (obligatoire, insensible à la casse).
  *       - in: query
- *         name: pointDepartTerm
+ *         name: pointDepart
  *         required: false
  *         schema:
  *           type: string
- *         description: Terme du point de départ à rechercher (optionnel, insensible à la casse)
+ *         description: Texte à rechercher pour le point de départ (optionnel, insensible à la casse).
+ *       - in: query
+ *         name: date
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: >
+ *           Date du trajet à rechercher au format **AAAA-MM-JJ**. 
+ *           - Exemple : `2024-12-09`.
+ *           - La recherche prend en compte uniquement la partie jour (l'heure est ignorée).
+ *           - Si la date n'est pas fournie, les trajets futurs sont retournés.
  *       - in: query
  *         name: fumeur
  *         required: false
  *         schema:
  *           type: boolean
- *         description: Indique si le trajet accepte les fumeurs (optionnel)
+ *         description: Indique si le trajet accepte les fumeurs (optionnel).
  *       - in: query
  *         name: animaux
  *         required: false
  *         schema:
  *           type: boolean
- *         description: Indique si le trajet accepte les animaux (optionnel)
+ *         description: Indique si le trajet accepte les animaux (optionnel).
  *       - in: query
  *         name: filleUniquement
  *         required: false
  *         schema:
  *           type: boolean
- *         description: Indique si le trajet est réservé aux femmes uniquement (optionnel)
+ *         description: Indique si le trajet est réservé aux femmes uniquement (optionnel).
  *       - in: query
  *         name: placesDispo
  *         required: false
  *         schema:
  *           type: integer
- *         description: Nombre minimum de places disponibles pour le trajet (optionnel)
+ *         description: Nombre minimum de places disponibles pour le trajet (optionnel).
  *     responses:
  *       200:
  *         description: Liste des trajets correspondant aux critères
@@ -190,13 +201,13 @@ router.get('/estimation/PrixMaxMin/:distance',TrajetController.getEstimationPrix
  *               items:
  *                 $ref: '#/components/schemas/Trajet'
  *       400:
- *         description: Le terme du point d'arrivée est obligatoire
+ *         description: Le point d'arrivée est obligatoire
  *       500:
  *         description: Erreur interne du serveur
  */
 
-router.get('/filter/Trajets', TrajetController.filterTrajets);
 
+router.get('/filter/Trajets', TrajetController.filterTrajets); 
 /**
  * @swagger
  * /trajets/quicksearch:
@@ -204,41 +215,26 @@ router.get('/filter/Trajets', TrajetController.filterTrajets);
  *     summary: Recherche rapide des trajets
  *     tags:
  *       - Trajets
- *     description: Recherche des trajets en fonction d'un terme (par exemple point d'arrivée ou point de départ).
+ *     description: Recherche des trajets en fonction d'un texte (description ou terme). Si aucune correspondance n'est trouvée dans les descriptions, la recherche se poursuit dans les termes associés.
  *     parameters:
- *       - name: searchTerm
+ *       - name: text
  *         in: query
- *         description: Terme à rechercher dans les points d'arrivée ou de départ
+ *         description: Texte à rechercher (description ou terme)
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Liste des trajets correspondant au terme de recherche
+ *         description: Liste des descriptions ou termes correspondants de manière unique
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   pointArrivee:
- *                     type: string
- *                     description: Point d'arrivée du trajet
- *                   pointDepart:
- *                     type: string
- *                     description: Point de départ du trajet
- *                   fumeur:
- *                     type: boolean
- *                     description: Si le trajet est fumeur
- *                   animaux:
- *                     type: boolean
- *                     description: Si les animaux sont autorisés
- *                   placesDispo:
- *                     type: integer
- *                     description: Nombre de places disponibles
+ *                 type: string
+ *                 description: Description ou terme correspondant au texte recherché
  *       400:
- *         description: Le terme de recherche est obligatoire
+ *         description: Le texte de recherche est obligatoire
  *       500:
  *         description: Erreur serveur interne
  */
@@ -280,6 +276,80 @@ router.get('/quicksearch', TrajetController.quickSearch);
  *                   description: Message d'erreur
  */
 router.get('/Passager/:id', TrajetController.getTrajetsByPassager);
+
+/**
+ * @swagger
+ * /trajets/same-points:
+ *   post:
+ *     summary: "Recherche des trajets avec les mêmes points"
+ *     description: "Cette fonction recherche les trajets qui ont les mêmes descriptions de points de départ et d'arrivée. Si aucun trajet n'est trouvé avec ces descriptions exactes, la recherche est effectuée sur le terme avant-dernier des points de départ et d'arrivée."
+ *     tags:
+ *       - Trajets
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pointDepart
+ *               - pointArrivee
+ *             properties:
+ *               pointDepart:
+ *                 type: object
+ *                 required:
+ *                   - description
+ *                   - terms
+ *                 properties:
+ *                   description:
+ *                     type: string
+ *                     example: "TEK-UP Private College of Engineering & Technology, Rue Newton، Ariana, Tunisia"
+ *                   terms:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         offset:
+ *                           type: integer
+ *                         value:
+ *                           type: string
+ *                           example: "TEK-UP Private College of Engineering & Technology"
+ *               pointArrivee:
+ *                 type: object
+ *                 required:
+ *                   - description
+ *                   - terms
+ *                 properties:
+ *                   description:
+ *                     type: string
+ *                     example: "Rue De Tétouan، Tunis, Tunisia"
+ *                   terms:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         offset:
+ *                           type: integer
+ *                         value:
+ *                           type: string
+ *                           example: "Rue De Tétouan"
+ *     responses:
+ *       '200':
+ *         description: "Trajets trouvés avec les mêmes points"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Trajet'
+ *       '400':
+ *         description: "Les points de départ et d'arrivée sont requis"
+ *       '500':
+ *         description: "Erreur interne du serveur"
+ * 
+ */
+router.post('/same-points', TrajetController.getTrajetsBySamePoints);
+
 
 /**
  * @swagger

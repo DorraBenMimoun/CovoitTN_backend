@@ -23,7 +23,6 @@ describe('Modèle Reclamation', () => {
     await mongoServer.stop();
   });
 
-
   it('doit être invalide si des champs requis sont manquants', async () => {
     const reclamation = new Reclamation({}); // Réclamation sans champs requis
 
@@ -34,8 +33,28 @@ describe('Modèle Reclamation', () => {
   });
 
   it('doit être valide avec des données correctes', async () => {
-    const utilisateur1 = await Utilisateur.create({ nom: 'John', email: 'john.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
-    const utilisateur2 = await Utilisateur.create({ nom: 'Jane', email: 'jane.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
+    const utilisateur1 = await Utilisateur.create({
+      nom: 'John',
+      email: 'john.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
+    const utilisateur2 = await Utilisateur.create({
+      nom: 'Jane',
+      email: 'jane.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
 
     const reclamation = new Reclamation({
       utilisateurReclamant: utilisateur1._id,
@@ -46,18 +65,43 @@ describe('Modèle Reclamation', () => {
     const savedReclamation = await reclamation.save();
 
     expect(savedReclamation._id).to.exist;
-    expect(savedReclamation.utilisateurReclamant.toString()).to.equal(utilisateur1._id.toString());
-    expect(savedReclamation.utilisateurReclame.toString()).to.equal(utilisateur2._id.toString());
-    expect(savedReclamation.raison).to.equal('Le comportement n’est pas acceptable.');
+    expect(savedReclamation.utilisateurReclamant.toString()).to.equal(
+      utilisateur1._id.toString(),
+    );
+    expect(savedReclamation.utilisateurReclame.toString()).to.equal(
+      utilisateur2._id.toString(),
+    );
+    expect(savedReclamation.raison).to.equal(
+      'Le comportement n’est pas acceptable.',
+    );
     expect(savedReclamation.etat).to.equal('En cours'); // Vérifie la valeur par défaut
   });
 
-
   it('doit accepter uniquement les états valides', async () => {
-    await Utilisateur.deleteOne({ email: "john.doe@example.com" });
-    await Utilisateur.deleteOne({ email: "jane.doe@example.com" });
-    const utilisateur1 = await Utilisateur.create({ nom: 'John', email: 'john.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
-    const utilisateur2 = await Utilisateur.create({ nom: 'Jane', email: 'jane.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
+    await Utilisateur.deleteOne({ email: 'john.doe@example.com' });
+    await Utilisateur.deleteOne({ email: 'jane.doe@example.com' });
+    const utilisateur1 = await Utilisateur.create({
+      nom: 'John',
+      email: 'john.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
+    const utilisateur2 = await Utilisateur.create({
+      nom: 'Jane',
+      email: 'jane.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
 
     const reclamation = new Reclamation({
       utilisateurReclamant: utilisateur1._id,
@@ -71,11 +115,31 @@ describe('Modèle Reclamation', () => {
   });
 
   it('doit définir la dateTraitement et la réponse si l’état est modifié', async () => {
-    await Utilisateur.deleteOne({ email: "john.doe@example.com" });
-    await Utilisateur.deleteOne({ email: "jane.doe@example.com" });
+    await Utilisateur.deleteOne({ email: 'john.doe@example.com' });
+    await Utilisateur.deleteOne({ email: 'jane.doe@example.com' });
 
-    const utilisateur1 = await Utilisateur.create({ nom: 'John', email: 'john.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
-    const utilisateur2 = await Utilisateur.create({ nom: 'Jane', email: 'jane.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
+    const utilisateur1 = await Utilisateur.create({
+      nom: 'John',
+      email: 'john.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
+    const utilisateur2 = await Utilisateur.create({
+      nom: 'Jane',
+      email: 'jane.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
 
     const reclamation = await Reclamation.create({
       utilisateurReclamant: utilisateur1._id,
@@ -91,6 +155,8 @@ describe('Modèle Reclamation', () => {
 
     expect(updatedReclamation.etat).to.equal('Traitée');
     expect(updatedReclamation.dateTraitement).to.exist;
-    expect(updatedReclamation.reponse).to.equal('Nous avons traité votre réclamation.');
+    expect(updatedReclamation.reponse).to.equal(
+      'Nous avons traité votre réclamation.',
+    );
   });
 });

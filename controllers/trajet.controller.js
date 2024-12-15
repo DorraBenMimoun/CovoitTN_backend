@@ -4,9 +4,7 @@ const Reservation = require('../models/reservation.model.js');
 // Create and Save a new Trajet
 exports.createTrajet = async (req, res) => {
   try {
-    const idUser= req.user._id;
-   
-
+    const idUser = req.user._id;
 
     // S'assurer que les points de départ et d'arrivée contiennent les coordonnées lat et lng
     const { pointDepart, pointArrivee } = req.body;
@@ -22,10 +20,10 @@ exports.createTrajet = async (req, res) => {
         .status(400)
         .json({ message: "Les coordonnées du point d'arrivée sont requises." });
     }
-    const trajet =new Trajet({
+    const trajet = new Trajet({
       idConducteur: idUser,
-      pointDepart:pointDepart,
-      pointArrivee:pointArrivee,
+      pointDepart: pointDepart,
+      pointArrivee: pointArrivee,
       dateDepart: req.body.dateDepart,
       heureDepart: req.body.heureDepart,
       placesDispo: req.body.placesDispo,
@@ -36,10 +34,9 @@ exports.createTrajet = async (req, res) => {
       animaux: req.body.animaux,
       filleUniquement: req.body.filleUniquement,
       maxPassagersArriere: req.body.maxPassagersArriere,
- 
     });
     await trajet.save();
-    res.status(201).json(trajet);
+    res.status(200).json(trajet);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -74,89 +71,98 @@ exports.getTrajetById = async (req, res) => {
 exports.updateTrajet = async (req, res) => {
   try {
     const id = req.params.id;
-    const idUser= req.user._id;
-    
+    const idUser = req.user._id;
+
     const updatedData = req.body;
+
     // Récupérer le trajet actuel
     const trajet = await Trajet.findById(id);
- 
-    
+
     if (!trajet) {
       return res.status(404).json({ message: 'Trajet non trouvé.' });
     }
     if (trajet.idConducteur.toString() !== idUser.toString()) {
-      return res.status(401).json({ message: 'You are not authorized to do this action' });
+      return res
+        .status(401)
+        .json({ message: 'Ce trajet ne vous appartient pas' });
     }
 
+    // Récupérer les réservations associées à ce trajet
+    const reservations = await Reservation.find({
+      idTrajet: id,
+      etat: 'Acceptée',
+    });
 
-
-    // 1- Récupérer les réservations associées à ce trajet
-    const reservations = await Reservation.find({ idTrajet: id });
-
-    // 2- Calculer le nombre de places restantes
+    // Calculer le nombre de places déjà réservées
     const nbrPlacesReservees = reservations.reduce(
       (sum, res) => sum + res.nbrPlacesReservees,
       0,
     );
-    const placesRestantes = trajet.placesDispo - nbrPlacesReservees;
 
-    // Vérification si le nombre de places disponibles mis à jour est inférieur à 0 ou dépasse le nombre de réservations existantes
-    if (
-      updatedData.placesDispo < nbrPlacesReservees ||
-      updatedData.placesDispo < 0
-    ) {
-      return res.status(400).json({ message: 'Nombre de places invalides.' });
-    }
-
-    // Vérification si le prix est inférieur à 0
-    if (updatedData.prixTrajet < 0) {
-      return res.status(400).json({ message: 'Prix invalide.' });
-    }
-
-    // Vérification des modifications interdites si des réservations existent
-    const restrictedFields = [
-      'prix',
+    // Définir les champs autorisés à être mis à jour
+    const allowedFields = [
+      'prixTrajet',
+      'placesDispo',
       'heureDepart',
       'destination',
       'depart',
+      'fumeur',
+      'animaux',
+      'filleUniquement',
+      'maxPassagersArriere',
     ];
-    if (
-      reservations.length > 0 &&
-      restrictedFields.some(
-        (field) =>
-          updatedData[field] !== undefined &&
-          updatedData[field] !== trajet[field],
-      )
-    ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'Impossible de modifier certaines informations car des réservations existent.',
-        });
-    }
 
-    // Vérifier si le prix est dans une plage valide si la destination ou le départ est mis à jour
-    /*if ((updatedData.destination || updatedData.depart) && (updatedData.prix < trajet.prixMin || updatedData.prix > trajet.prixMax)) {
-      return res.status(400).json({ message: 'Le prix est hors de la plage autorisée.' });
-    }*/
+    // Définir les champs restreints si des réservations existent
+    const restrictedFields = [
+      'heureDepart',
+      'destination',
+      'depart',
+      'prixTrajet',
+    ];
 
-    // Vérification des champs qui nécessitent une notification aux passagers
-    /*const notificationFields = ['fumeur', 'animaux', 'filleUniquement', 'maxPassagersArriere', 'marqueVoiture', 'couleurVoiture'];
-    const fieldsToNotify = notificationFields.filter(field => updatedData[field] !== undefined && updatedData[field] !== trajet[field]);
-    if (fieldsToNotify.length > 0) {
-      // TODO : Informer les passagers des modifications
-      // Exemple : sendNotificationToPassengers(trajet, fieldsToNotify);
-    }
-*/
-    // Mettre à jour le trajet
-    const updatedTrajet = await Trajet.findByIdAndUpdate(id, updatedData, {
-      new: true,
+    // Parcourir les champs mis à jour et appliquer les validations
+    Object.keys(updatedData).forEach((field) => {
+      if (!allowedFields.includes(field)) {
+        // Rejeter les champs non autorisés
+        delete updatedData[field];
+      } else {
+        // Validation pour "placesDispo"
+        if (field === 'placesDispo') {
+          if (
+            updatedData.placesDispo < nbrPlacesReservees ||
+            updatedData.placesDispo < 0
+          ) {
+            throw new Error('Nombre de places invalides.');
+          }
+        }
+
+        // Validation pour "prixTrajet"
+        if (field === 'prixTrajet' && updatedData.prixTrajet < 0) {
+          throw new Error('Prix invalide.');
+        }
+
+        // Vérification des champs restreints
+        if (
+          reservations.length > 0 &&
+          restrictedFields.includes(field) &&
+          updatedData[field] !== trajet[field]
+        ) {
+          throw new Error(
+            `Impossible de modifier ${field} car des réservations existent.`,
+          );
+        }
+
+        // Appliquer la mise à jour
+        trajet[field] = updatedData[field];
+      }
     });
 
-    res.status(200).json(updatedTrajet);
+    // Sauvegarder le trajet mis à jour
+    await trajet.save();
+
+    return res.status(200).json(trajet);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -164,31 +170,31 @@ exports.updateTrajet = async (req, res) => {
 exports.deleteTrajet = async (req, res) => {
   try {
     const id = req.params.id;
-    console.log("id controller",id);
-    
+
     // Trouver le trajet par son ID
     const trajet = await Trajet.findById(id);
-    console.log("trajet controller",trajet);
-    
+
     if (!trajet) {
       return res.status(404).json({ message: 'Trajet non trouvé' });
     }
 
-    if(trajet.idConducteur.toString() !== req.user._id.toString()){
-      return res.status(401).json({ message: 'You are not authorized to do this action' });
+    if (trajet.idConducteur.toString() !== req.user._id.toString()) {
+      return res
+        .status(401)
+        .json({ message: 'You are not authorized to do this action' });
     }
 
     // Vérifier si des réservations existent pour ce trajet
     const reservations = await Reservation.find({ idTrajet: trajet._id });
 
     if (reservations.length > 0) {
-      console.log("trajet avant archive",trajet);
+      console.log('trajet avant archive', trajet);
       // Si des réservations existent, on archive le trajet et on annule les réservations
       trajet.archieved = true;
 
       console.log('Trajet archivé:', trajet.archived);
       await trajet.save(); // Sauvegarder le trajet avec l'attribut 'archived' mis à jour
-      console.log("trajet aprs archive",trajet);
+      console.log('trajet aprs archive', trajet);
 
       // Annuler toutes les réservations associées au trajet
       for (let i = 0; i < reservations.length; i++) {
@@ -196,13 +202,14 @@ exports.deleteTrajet = async (req, res) => {
         await reservations[i].save();
       }
 
-      return res.status(200).json({ message: 'Trajet archivé et réservations annulées', trajet });
+      return res
+        .status(200)
+        .json({ message: 'Trajet archivé et réservations annulées', trajet });
     } else {
       // Si aucune réservation n'existe, supprimer le trajet
       await Trajet.findByIdAndDelete(id);
       return res.status(200).json({ message: 'Trajet supprimé avec succès' });
     }
-
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -269,16 +276,31 @@ exports.filterTrajets = async (req, res) => {
   try {
     console.log('Requête reçue avec paramètres:', req.query);
 
-    const { pointArrivee, pointDepart, fumeur, animaux, filleUniquement, placesDispo, date } = req.query;
+    const {
+      pointArrivee,
+      pointDepart,
+      fumeur,
+      animaux,
+      filleUniquement,
+      placesDispo,
+      date,
+    } = req.query;
 
     // Vérifier que le point d'arrivée est fourni
     if (!pointArrivee) {
-      return res.status(400).json({ message: "Le point d'arrivée est obligatoire." });
+      return res
+        .status(400)
+        .json({ message: "Le point d'arrivée est obligatoire." });
     }
 
     // Expression régulière pour la recherche dans les descriptions ou les termes
-    const regexPointArrivee = new RegExp(pointArrivee.replace(/[^\w\s]/g, ''), 'i');
-    const regexPointDepart = pointDepart ? new RegExp(pointDepart.replace(/[^\w\s]/g, ''), 'i') : null;
+    const regexPointArrivee = new RegExp(
+      pointArrivee.replace(/[^\w\s]/g, ''),
+      'i',
+    );
+    const regexPointDepart = pointDepart
+      ? new RegExp(pointDepart.replace(/[^\w\s]/g, ''), 'i')
+      : null;
 
     // Construction des filtres
     const filtre = {
@@ -286,7 +308,11 @@ exports.filterTrajets = async (req, res) => {
         {
           $or: [
             { 'pointArrivee.description': { $regex: regexPointArrivee } },
-            { 'pointArrivee.terms': { $elemMatch: { value: { $regex: regexPointArrivee } } } },
+            {
+              'pointArrivee.terms': {
+                $elemMatch: { value: { $regex: regexPointArrivee } },
+              },
+            },
           ],
         },
       ],
@@ -297,7 +323,11 @@ exports.filterTrajets = async (req, res) => {
       filtre.$and.push({
         $or: [
           { 'pointDepart.description': { $regex: regexPointDepart } },
-          { 'pointDepart.terms': { $elemMatch: { value: { $regex: regexPointDepart } } } },
+          {
+            'pointDepart.terms': {
+              $elemMatch: { value: { $regex: regexPointDepart } },
+            },
+          },
         ],
       });
     }
@@ -345,7 +375,6 @@ exports.filterTrajets = async (req, res) => {
   }
 };
 
-
 exports.quickSearch = async (req, res) => {
   try {
     console.log('Requête reçue avec paramètre de recherche:', req.query);
@@ -367,7 +396,10 @@ exports.quickSearch = async (req, res) => {
         { 'pointDepart.description': regexText },
         { 'pointArrivee.description': regexText },
       ],
-    }).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    }).populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
 
     // Si des trajets sont trouvés dans les descriptions, extraire les descriptions correspondantes
     if (trajets.length > 0) {
@@ -388,16 +420,20 @@ exports.quickSearch = async (req, res) => {
         { 'pointDepart.terms': { $elemMatch: { value: regexText } } },
         { 'pointArrivee.terms': { $elemMatch: { value: regexText } } },
       ],
-    }).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    }).populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
 
     // Extraire les termes uniques correspondants
     const uniqueTerms = [
       ...new Set(
-        trajetsByTerms.flatMap((trajet) =>
-          [
-            ...(trajet.pointDepart.terms || []).map((term) => term.value),
-            ...(trajet.pointArrivee.terms || []).map((term) => term.value),
-          ].filter((value) => regexText.test(value)), // Filtrer les termes correspondant au texte
+        trajetsByTerms.flatMap(
+          (trajet) =>
+            [
+              ...(trajet.pointDepart.terms || []).map((term) => term.value),
+              ...(trajet.pointArrivee.terms || []).map((term) => term.value),
+            ].filter((value) => regexText.test(value)), // Filtrer les termes correspondant au texte
         ),
       ),
     ];
@@ -410,41 +446,54 @@ exports.quickSearch = async (req, res) => {
   }
 };
 
-
 exports.getTrajetsBySamePoints = async (req, res) => {
   try {
     const { pointDepart, pointArrivee } = req.body;
 
     if (!pointDepart || !pointArrivee) {
-      return res.status(400).json({ message: "Les points de départ et d'arrivée sont requis." });
+      return res
+        .status(400)
+        .json({ message: "Les points de départ et d'arrivée sont requis." });
     }
 
-    console.log('Recherche des trajets avec les mêmes points:', { pointDepart, pointArrivee });
+    console.log('Recherche des trajets avec les mêmes points:', {
+      pointDepart,
+      pointArrivee,
+    });
 
     // Étape 1 : Recherche avec la description exacte
     let trajets = await Trajet.find({
       'pointDepart.description': pointDepart.description,
       'pointArrivee.description': pointArrivee.description,
-    }).populate('idConducteur', 'nom prenom email photo sexe compteActif phone');
+    }).populate(
+      'idConducteur',
+      'nom prenom email photo sexe compteActif phone',
+    );
 
     // Si des trajets correspondants sont trouvés, on les retourne immédiatement
     if (trajets.length > 0) {
       return res.status(200).json(trajets);
     }
 
-    console.log('Aucun trajet trouvé avec les descriptions exactes, recherche avec les avant-derniers termes...');
+    console.log(
+      'Aucun trajet trouvé avec les descriptions exactes, recherche avec les avant-derniers termes...',
+    );
 
     // Étape 2 : Recherche avec les avant-derniers termes
-    const avantDernierTermDepart = pointDepart.terms[pointDepart.terms.length - 2]?.value;
-    const avantDernierTermArrivee = pointArrivee.terms[pointArrivee.terms.length - 2]?.value;
+    const avantDernierTermDepart =
+      pointDepart.terms[pointDepart.terms.length - 2]?.value;
+    const avantDernierTermArrivee =
+      pointArrivee.terms[pointArrivee.terms.length - 2]?.value;
 
     if (!avantDernierTermDepart || !avantDernierTermArrivee) {
-      return res.status(400).json({ message: "Les avant-derniers termes des points sont manquants." });
+      return res.status(400).json({
+        message: 'Les avant-derniers termes des points sont manquants.',
+      });
     }
 
     trajets = await Trajet.find().populate(
       'idConducteur',
-      'nom prenom email photo sexe compteActif phone'
+      'nom prenom email photo sexe compteActif phone',
     );
 
     // Filtrage des trajets sur les avant-derniers termes
@@ -452,8 +501,10 @@ exports.getTrajetsBySamePoints = async (req, res) => {
       const trajetDepartTerms = trajet.pointDepart.terms;
       const trajetArriveeTerms = trajet.pointArrivee.terms;
 
-      const trajetAvantDernierDepart = trajetDepartTerms[trajetDepartTerms.length - 2]?.value;
-      const trajetAvantDernierArrivee = trajetArriveeTerms[trajetArriveeTerms.length - 2]?.value;
+      const trajetAvantDernierDepart =
+        trajetDepartTerms[trajetDepartTerms.length - 2]?.value;
+      const trajetAvantDernierArrivee =
+        trajetArriveeTerms[trajetArriveeTerms.length - 2]?.value;
 
       return (
         trajetAvantDernierDepart === avantDernierTermDepart &&
@@ -468,7 +519,6 @@ exports.getTrajetsBySamePoints = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 const PRIX_ESSENCE = 2.525; // Prix le litre d'essence en dinar
 const DISTANCE_PAR_LITRE = 20; // Distance en km par litre d'essence

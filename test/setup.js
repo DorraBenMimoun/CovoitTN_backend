@@ -1,18 +1,50 @@
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const jwt = require('jsonwebtoken');
+const Utilisateur = require('../models/utilisateur.model');
 
-before(async () => {
+let mongoServer;
+
+beforeAll(async () => {
+  // Si une connexion existe déjà, ferme-la.
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+
+  // Démarrer la base en mémoire et se connecter
+  mongoServer = await MongoMemoryServer.create();
+  const uri = mongoServer.getUri();
+  await mongoose.connect(uri);
+
+  // Créer un utilisateur de test et générer un token
   try {
-    await mongoose.connect("mongodb+srv://covoittn:covoittn@covoittn.697vd.mongodb.net/?retryWrites=true&w=majority&appName=CovoitTN", {
-      //useNewUrlParser: true,
-      //useUnifiedTopology: true,
+    const utilisateur = await Utilisateur.create({
+      nom: 'Test',
+      prenom: 'Test',
+      email: 'Test@example.com',
+      password: 'Password123',
+      phone: '22650656',
+      dateNaissance: '1990-01-01',
+      sexe: 'Femme',
     });
-    console.log('Connected to MongoDB for testing');
-  } catch (err) {
-    console.error('Failed to connect to MongoDB', err);
+
+    // Générer un token JWT
+    const token = jwt.sign({ id: utilisateur._id }, '123456789', {
+      expiresIn: '2h',
+    });
+
+    // Partager l'utilisateur et le token avec les autres fichiers
+    global.testUser = {
+      id: utilisateur._id,
+      token,
+    };
+  } catch (error) {
+    throw error;
   }
 });
 
-after(async () => {
+afterAll(async () => {
+  await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
-  console.log('MongoDB connection closed');
+  await mongoServer.stop();
 });

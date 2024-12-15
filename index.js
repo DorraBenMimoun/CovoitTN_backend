@@ -98,5 +98,10 @@ server.on('listening', () => {
   console.log('Listening on ' + bind);
 });
 
-server.listen(port);
+if (require.main === module) {
+  server.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
 module.exports = app; // Assurez-vous d'exporter l'instance de l'application

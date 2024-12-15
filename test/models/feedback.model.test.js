@@ -17,26 +17,37 @@ describe('Modèle Feedback', () => {
 
     // Créer des données fictives pour Trajet et Utilisateur
     const trajet = new Trajet({
-        idConducteur: new mongoose.Types.ObjectId(),
-        dateDepart: new Date(),
-        heureDepart: '10:00',
-        duree: 120,
-        distance: 150,
-        placesDispo: 4,
-        prixTrajet: 20,
-        pointDepart: {
-          description: 'Place de Barcelone, Tunis',
-          place_id: '123abc',
-          reference: 'xyz456',
-          terms: ['Place', 'Barcelone'],
-        },
-        pointArrivee: {
-          description: 'Avenue Habib Bourguiba, Sousse',
-          place_id: '456def',
-          reference: 'abc789',
-          terms: ['Avenue', 'Habib', 'Bourguiba'],
-        },
-      });    const utilisateur = await Utilisateur.create({ nom: 'John', email: 'john.doe@example.com', compteActif: true, statusVerfier: true, password: 'password123', phone: '0123456789', dateNaissance: '1990-01-01', sexe: 'Homme',prenom:'Doe' });
+      idConducteur: new mongoose.Types.ObjectId(),
+      dateDepart: new Date(),
+      heureDepart: '10:00',
+      duree: 120,
+      distance: 150,
+      placesDispo: 4,
+      prixTrajet: 20,
+      pointDepart: {
+        description: 'Place de Barcelone, Tunis',
+        place_id: '123abc',
+        reference: 'xyz456',
+        terms: ['Place', 'Barcelone'],
+      },
+      pointArrivee: {
+        description: 'Avenue Habib Bourguiba, Sousse',
+        place_id: '456def',
+        reference: 'abc789',
+        terms: ['Avenue', 'Habib', 'Bourguiba'],
+      },
+    });
+    const utilisateur = await Utilisateur.create({
+      nom: 'John',
+      email: 'john.doe@example.com',
+      compteActif: true,
+      statusVerfier: true,
+      password: 'password123',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      sexe: 'Homme',
+      prenom: 'Doe',
+    });
     await trajet.save();
     await utilisateur.save();
 
@@ -85,7 +96,9 @@ describe('Modèle Feedback', () => {
 
     const err = feedback.validateSync();
     expect(err.errors.note).to.exist;
-    expect(err.errors.note.message).to.equal('Path `note` (6) is more than maximum allowed value (5).');
+    expect(err.errors.note.message).to.equal(
+      'Path `note` (6) is more than maximum allowed value (5).',
+    );
   });
 
   it('doit permettre des descriptions optionnelles', async () => {

@@ -77,7 +77,7 @@ describe('Modèle Utilisateur', () => {
       prenom: 'Doe',
       email: 'john.doe@example.com',
       password: 'password123',
-      phone: '0123456789',
+      phone: '22650656',
       dateNaissance: '1990-01-01',
       sexe: 'Homme',
       compteActif: true,
@@ -111,7 +111,7 @@ describe('Modèle Utilisateur', () => {
   });
 
   // Test : Validation des valeurs par défaut
-  it("doit définir des valeurs par défaut pour les champs non requis", async () => {
+  it('doit définir des valeurs par défaut pour les champs non requis', async () => {
     const utilisateur = new Utilisateur({
       nom: 'John',
       prenom: 'Doe',

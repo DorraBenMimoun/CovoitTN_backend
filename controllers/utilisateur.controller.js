@@ -2,13 +2,11 @@ const Utilisateur = require('../models/utilisateur.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-
 const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 const passwordRegex = /^[A-Za-z\d]{6,}$/;
 const phoneRegex = /^\d{8}$/;
 const nameRegex = /^[a-zA-ZÀ-ÿ\- ]{2,}$/;
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
 
 const getUtilisateurs = async (req, res) => {
   try {
@@ -46,10 +44,14 @@ const registerUtilisateur = async (req, res) => {
     ];
 
     for (let i = 0; i < list_required.length; i++) {
-      if (!list_required[i] || (typeof list_required[i] === 'string' && list_required[i].trim() === '')) {
-        return res.status(400).json({ message: 'tous les champs sont obligatoires' });
-      }
-       else {
+      if (
+        !list_required[i] ||
+        (typeof list_required[i] === 'string' && list_required[i].trim() === '')
+      ) {
+        return res
+          .status(400)
+          .json({ message: 'tous les champs sont obligatoires' });
+      } else {
         if (!emailRegex.test(data.email)) {
           //verifier email and mdp
           return res.status(400).json({ message: 'email invalide' });
@@ -61,7 +63,6 @@ const registerUtilisateur = async (req, res) => {
           if (!nameRegex.test(data.prenom)) {
             return res.status(400).json({ message: 'prenom invalide' });
           }
-       
 
           if (!dateRegex.test(data.dateNaissance)) {
             return res.status(400).json({
@@ -110,6 +111,7 @@ const registerUtilisateur = async (req, res) => {
       user: savedUtilisateur,
     });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -142,7 +144,7 @@ const loginUser = async (req, res) => {
         const validPass = bcrypt.compareSync(data.password, user.password);
         if (!validPass) {
           return res
-            .status(404)
+            .status(400)
             .json({ message: 'email or password incorrect' });
         } else {
           const token = create_tkn(user._id);
@@ -182,9 +184,9 @@ const updateUtilisateur = async (req, res) => {
 
     for (let i = 0; i < list_required.length; i++) {
       if (!list_required[i] || list_required[i].trim() === '') {
-        return res
-          .status(400)
-          .json({ message: 'Tous les champs obligatoires doivent être remplis' });
+        return res.status(400).json({
+          message: 'Tous les champs obligatoires doivent être remplis',
+        });
       }
     }
 
@@ -221,11 +223,14 @@ const updateUtilisateur = async (req, res) => {
 
     // Vérification de l'unicité de l'email
     if (data.email) {
-      const existingUser = await Utilisateur.findOne({ email: data.email, _id: { $ne: id } });
+      const existingUser = await Utilisateur.findOne({
+        email: data.email,
+        _id: { $ne: id },
+      });
       if (existingUser) {
-        return res
-          .status(400)
-          .json({ message: 'Cet email est déjà utilisé par un autre utilisateur' });
+        return res.status(400).json({
+          message: 'Cet email est déjà utilisé par un autre utilisateur',
+        });
       }
     }
 
@@ -236,7 +241,9 @@ const updateUtilisateur = async (req, res) => {
     }
 
     // Mise à jour dans la base de données
-    const updatedUtilisateur = await Utilisateur.findByIdAndUpdate(id, data, { new: true });
+    const updatedUtilisateur = await Utilisateur.findByIdAndUpdate(id, data, {
+      new: true,
+    });
 
     if (!updatedUtilisateur) {
       return res.status(404).json({ message: 'Utilisateur introuvable' });

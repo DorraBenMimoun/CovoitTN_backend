@@ -6,8 +6,9 @@
   "scripts": {
     "serve": "node index.js",
     "dev": "nodemon index.js",
-    "testU": "mocha  --parallel false --timeout 30000  'test/models/*.test.js'",
-    "testI": "mocha  --timeout 20000  'test/routes/*.test.js'"
+    "unit-test": "mocha  --parallel false --timeout 30000  'test/models/*.test.js'",
+    "integration-test": "jest --config jest.integration.config.js",
+    "test": "npm run unit-test && npm run integration-test"
   },
   "keywords": [],
   "author": "",

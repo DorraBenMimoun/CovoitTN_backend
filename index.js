@@ -99,3 +99,4 @@ server.on('listening', () => {
 });
 
 server.listen(port);
+module.exports = app; // Assurez-vous d'exporter l'instance de l'application

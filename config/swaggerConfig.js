@@ -14,6 +14,20 @@ const swaggerOptions = {
         },
       ],
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
   apis: ['./routes/trajet.route.js', './routes/utilisateur.route.js','./routes/reservation.route.js','./routes/feedback.route.js','./routes/reclamation.route.js'], // Dossier où Swagger va lire les annotations
 };

@@ -4,6 +4,10 @@ const Reservation = require('../models/reservation.model.js');
 // Create and Save a new Trajet
 exports.createTrajet = async (req, res) => {
   try {
+    const idUser= req.user._id;
+   
+
+
     // S'assurer que les points de départ et d'arrivée contiennent les coordonnées lat et lng
     const { pointDepart, pointArrivee } = req.body;
 
@@ -18,8 +22,24 @@ exports.createTrajet = async (req, res) => {
         .status(400)
         .json({ message: "Les coordonnées du point d'arrivée sont requises." });
     }
-    const trajet = await Trajet.create(req.body);
-    res.status(200).json(trajet);
+    const trajet =new Trajet({
+      idConducteur: idUser,
+      pointDepart:pointDepart,
+      pointArrivee:pointArrivee,
+      dateDepart: req.body.dateDepart,
+      heureDepart: req.body.heureDepart,
+      placesDispo: req.body.placesDispo,
+      prixTrajet: req.body.prixTrajet,
+      distance: req.body.distance,
+      duree: req.body.duree,
+      fumeur: req.body.fumeur,
+      animaux: req.body.animaux,
+      filleUniquement: req.body.filleUniquement,
+      maxPassagersArriere: req.body.maxPassagersArriere,
+ 
+    });
+    await trajet.save();
+    res.status(201).json(trajet);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -54,14 +74,21 @@ exports.getTrajetById = async (req, res) => {
 exports.updateTrajet = async (req, res) => {
   try {
     const id = req.params.id;
+    const idUser= req.user._id;
+    
     const updatedData = req.body;
-
     // Récupérer le trajet actuel
     const trajet = await Trajet.findById(id);
-
+ 
+    
     if (!trajet) {
-      return res.status(404).json({ message: 'Trajet non trouvé' });
+      return res.status(404).json({ message: 'Trajet non trouvé.' });
     }
+    if (trajet.idConducteur.toString() !== idUser.toString()) {
+      return res.status(401).json({ message: 'You are not authorized to do this action' });
+    }
+
+
 
     // 1- Récupérer les réservations associées à ce trajet
     const reservations = await Reservation.find({ idTrajet: id });
@@ -79,6 +106,11 @@ exports.updateTrajet = async (req, res) => {
       updatedData.placesDispo < 0
     ) {
       return res.status(400).json({ message: 'Nombre de places invalides.' });
+    }
+
+    // Vérification si le prix est inférieur à 0
+    if (updatedData.prixTrajet < 0) {
+      return res.status(400).json({ message: 'Prix invalide.' });
     }
 
     // Vérification des modifications interdites si des réservations existent
@@ -132,12 +164,18 @@ exports.updateTrajet = async (req, res) => {
 exports.deleteTrajet = async (req, res) => {
   try {
     const id = req.params.id;
+    console.log("id controller",id);
     
     // Trouver le trajet par son ID
     const trajet = await Trajet.findById(id);
+    console.log("trajet controller",trajet);
     
     if (!trajet) {
       return res.status(404).json({ message: 'Trajet non trouvé' });
+    }
+
+    if(trajet.idConducteur.toString() !== req.user._id.toString()){
+      return res.status(401).json({ message: 'You are not authorized to do this action' });
     }
 
     // Vérifier si des réservations existent pour ce trajet

@@ -46,22 +46,22 @@ const registerUtilisateur = async (req, res) => {
     ];
 
     for (let i = 0; i < list_required.length; i++) {
-      if (!list_required[i] || list_required[i].trim() === '') {
-        return res
-          .status(400)
-          .json({ message: 'tous les champs sont obligatoires' });
-      } else {
+      if (!list_required[i] || (typeof list_required[i] === 'string' && list_required[i].trim() === '')) {
+        return res.status(400).json({ message: 'tous les champs sont obligatoires' });
+      }
+       else {
         if (!emailRegex.test(data.email)) {
           //verifier email and mdp
           return res.status(400).json({ message: 'email invalide' });
         } else {
-         
+          if (!nameRegex.test(data.nom)) {
+            return res.status(400).json({ message: 'name invalide' });
+          }
+
           if (!nameRegex.test(data.prenom)) {
             return res.status(400).json({ message: 'prenom invalide' });
           }
-          if (!nameRegex.test(data.nom)) {
-            return res.status(400).json({ message: 'nom invalide' });
-          }
+       
 
           if (!dateRegex.test(data.dateNaissance)) {
             return res.status(400).json({

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const TrajetController = require('../controllers/trajet.controller');
+const { authentification } = require('../middelware/auth_middelware.js');
 
 /**
  * @swagger
@@ -50,7 +51,7 @@ router.get('/', TrajetController.getTrajets);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/', TrajetController.createTrajet);
+router.post('/',authentification, TrajetController.createTrajet);
 
 /**
  * @swagger
@@ -84,7 +85,7 @@ router.post('/', TrajetController.createTrajet);
  *       500:
  *         description: Erreur interne du serveur
  */
-router.put('/:id', TrajetController.updateTrajet);
+router.put('/:id',authentification, TrajetController.updateTrajet);
 
 /**
  * @swagger
@@ -108,7 +109,7 @@ router.put('/:id', TrajetController.updateTrajet);
  *       500:
  *         description: Erreur interne du serveur
  */
-router.delete('/:id', TrajetController.deleteTrajet);
+router.delete('/:id',authentification, TrajetController.deleteTrajet);
 
 /**
  * @swagger

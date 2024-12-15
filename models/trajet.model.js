@@ -29,6 +29,8 @@ const trajetSchema = mongoose.Schema({
   prixTrajet: {
     type: Number,
     required: true,
+    min: [0, 'Le prix du trajet doit être positif.'],
+
   },
   animaux: {
     type: Boolean,

@@ -13,6 +13,13 @@ const utilisateurSchema = mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      validate: {
+        validator: function (v) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(v);
+        },
+        message: (props) => `${props.value} n'est pas un email valide !`,
+      },
     },
     password: {
       type: String,

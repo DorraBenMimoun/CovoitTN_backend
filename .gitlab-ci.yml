@@ -9,26 +9,25 @@ build:
   image: node:18  # Mise à jour pour Node.js 18
   script:
     - echo "Installation des dépendances"
-    - npm install
+    - npm install  # Installe les dépendances (y compris les devDependencies)
   cache:
     paths:
       - node_modules/
 
-# Test stage - pour exécuter les tests de l'application (unitaires et d'intégration)
+# Test stage - pour exécuter les tests unitaires et d'intégration
 test:
   stage: test
   image: node:16  # Version Node.js 16
   script:
-    - echo "Installation des dépendances "
-    - npm install # Assurez-vous que toutes les dépendances, y compris mocha, sont installées
-    - npm install -g mocha # Installation globale de mocha
+    - echo "Installation des dépendances"
+    - npm install  # Assurez-vous que toutes les dépendances, y compris mocha et chai, sont installées
+    - npm install -g mocha  # Installation globale de mocha (si nécessaire)
     - echo "Exécution des tests unitaires"
-    - mocha --parallel false --timeout 30000 'test/models/*.test.js'
+    - npm run unit-test  # Exécute les tests unitaires
     - echo "Exécution des tests d'intégration"
-    - npm run integration-test
+    - npm run integration-test  # Exécute les tests d'intégration
   only:
-    - main
-
+    - main  # Exécute cette étape uniquement sur la branche "main"
 
 # Deploy stage - pour déployer l'application
 deploy:
@@ -36,9 +35,9 @@ deploy:
   image: node:18  # Mise à jour pour Node.js 18
   script:
     - echo "Démarrage de l'application"
-    - npm start
+    - npm start  # Démarre l'application
   only:
-    - main
+    - main  # Exécute cette étape uniquement sur la branche "main"
 
 # Variables d'environnement
 variables:

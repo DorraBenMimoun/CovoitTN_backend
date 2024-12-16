@@ -1,0 +1,46 @@
+stages:
+  - install
+  - test
+  - build
+  - deploy
+
+# Etape d'installation des dépendances
+install:
+  stage: install
+  image: node:16 # Utilise l'image Node.js officielle
+  script:
+    - npm install # Installer toutes les dépendances
+  only:
+    - main # Ou la branche sur laquelle tu veux que cela soit exécuté
+
+# Etape de tests unitaires et tests d'intégration
+test:
+  stage: test
+  image: node:16 # Utilise l'image Node.js pour les tests
+  script:
+    - npm install # Assurez-vous que les dépendances sont installées avant les tests
+    - npm run unit-test # Exécuter les tests unitaires
+    - npm run integration-test # Exécuter les tests d'intégration
+  only:
+    - main # Ou la branche sur laquelle tu veux que cela soit exécuté
+
+# Etape de build : construction de l'image Docker
+build:
+  stage: build
+  image: docker:20.10.16 # Utilise l'image officielle Docker
+  services:
+    - docker:19.03.12-dind # Docker-in-Docker pour la construction des images Docker
+  script:
+    - docker build -t my-node-app . # Construire l'image Docker
+    - docker tag my-node-app registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA # Tag de l'image
+  only:
+    - main # Ou la branche sur laquelle tu veux que cela soit exécuté
+
+# Etape de déploiement : déployer l'application
+deploy:
+  stage: deploy
+  script:
+    - docker push registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA # Pousser l'image vers GitLab Container Registry
+    - npm start # Démarrer l'application (assume que tu veux exécuter cela sur le serveur de déploiement)
+  only:
+    - main # Ou la branche de production

@@ -6,10 +6,10 @@ stages:
 # Build stage - pour installer les dépendances
 build:
   stage: build
-  image: node:18  # Utilisation de Node.js 18
+  image: node:20  # Utilisation de Node.js 20
   script:
     - echo "Installation des dépendances"
-    - npm install  # Installe toutes les dépendances, y compris devDependencies
+    - npm install  # Installe toutes les dépendances, y compris les devDependencies
   cache:
     paths:
       - node_modules/
@@ -17,10 +17,12 @@ build:
 # Test stage - pour exécuter les tests unitaires et d'intégration
 test:
   stage: test
-  image: node:20  # Utilisation de Node.js 16
+  image: node:20  # Utilisation de Node.js 20
   script:
     - echo "Installation des dépendances"
-    - npm install  # Installe toutes les dépendances, y compris les devDependencies (comme chai)
+    - npm install  # Assure que toutes les dépendances, y compris les devDependencies, sont installées
+    - echo "Vérification de l'installation de Mocha"
+    - npx mocha --version  # Vérifie que Mocha est bien installé
     - echo "Exécution des tests unitaires"
     - npm run unit-test  # Exécute les tests unitaires définis dans le script "unit-test"
     - echo "Exécution des tests d'intégration"
@@ -31,7 +33,7 @@ test:
 # Deploy stage - pour déployer l'application
 deploy:
   stage: deploy
-  image: node:18  # Utilisation de Node.js 18 pour le déploiement
+  image: node:20  # Utilisation de Node.js 20 pour le déploiement
   script:
     - echo "Démarrage de l'application"
     - npm start  # Démarre l'application avec "npm start"

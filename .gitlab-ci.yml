@@ -1,16 +1,18 @@
-  test:
+stages:
+  - test
+
+test:
   stage: test
   image: node:20  # Utilisation de Node.js 20
   script:
     - echo "Installation des dépendances"
-    - npm install --only=dev  # Installe les devDependencies explicitement
-    - ls
+    - npm install --only=dev  # Installe uniquement les devDependencies (comme Mocha, Chai, etc.)
     - echo "Vérification de l'installation de Mocha"
     - npx mocha --version  # Vérifie si Mocha est correctement installé
     - echo "Exécution des tests unitaires"
+    - ls
     - npm run unit-test  # Exécute les tests unitaires définis dans le script "unit-test"
     - echo "Exécution des tests d'intégration"
     - npm run integration-test  # Exécute les tests d'intégration définis dans le script "integration-test"
   only:
     - main  # Cette étape ne s'exécute que sur la branche principale
-

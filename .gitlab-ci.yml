@@ -17,7 +17,7 @@ build:
 # Test stage - pour exécuter les tests unitaires et d'intégration
 test:
   stage: test
-  image: node:16  # Utilisation de Node.js 16
+  image: node:20  # Utilisation de Node.js 16
   script:
     - echo "Installation des dépendances"
     - npm install  # Installe toutes les dépendances, y compris les devDependencies (comme chai)

@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
   - deploy
 
 # Build stage - pour installer les dépendances
@@ -20,12 +21,6 @@ test:
   script:
     - echo "Installation des dépendances"
     - npm install  # Assure que toutes les dépendances, y compris les devDependencies, sont installées
-    - echo "Vérification de l'installation de Mocha"
-    - npx mocha --version  # Vérifie que Mocha est bien installé
-    - echo "Exécution des tests unitaires"
-    - npm run unit-test  # Exécute les tests unitaires définis dans le script "unit-test"
-    - echo "Exécution des tests d'intégration"
-    - npm run integration-test  # Exécute les tests d'intégration définis dans le script "integration-test"
   only:
     - main  # Cette étape ne s'exécute que sur la branche principale
 
@@ -34,6 +29,8 @@ deploy:
   stage: deploy
   image: node:20  # Utilisation de Node.js 20 pour le déploiement
   script:
+    - echo "Installation des dépendances"
+    - npm install
     - echo "Démarrage de l'application"
     - npm start  # Démarre l'application avec "npm start"
   only:

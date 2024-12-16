@@ -6,10 +6,10 @@ stages:
 # Build stage - pour installer les dépendances
 build:
   stage: build
-  image: node:18  # Mise à jour pour Node.js 18
+  image: node:18  # Utilisation de Node.js 18
   script:
     - echo "Installation des dépendances"
-    - npm install  # Installe les dépendances (y compris les devDependencies)
+    - npm install  # Installe toutes les dépendances, y compris devDependencies
   cache:
     paths:
       - node_modules/
@@ -17,27 +17,26 @@ build:
 # Test stage - pour exécuter les tests unitaires et d'intégration
 test:
   stage: test
-  image: node:16  # Version Node.js 16
+  image: node:16  # Utilisation de Node.js 16
   script:
     - echo "Installation des dépendances"
-    - npm install  # Assurez-vous que toutes les dépendances, y compris mocha et chai, sont installées
-    - npm install -g mocha  # Installation globale de mocha (si nécessaire)
+    - npm install  # Installe toutes les dépendances, y compris les devDependencies (comme chai)
     - echo "Exécution des tests unitaires"
-    - npm run unit-test  # Exécute les tests unitaires
+    - npm run unit-test  # Exécute les tests unitaires définis dans le script "unit-test"
     - echo "Exécution des tests d'intégration"
-    - npm run integration-test  # Exécute les tests d'intégration
+    - npm run integration-test  # Exécute les tests d'intégration définis dans le script "integration-test"
   only:
-    - main  # Exécute cette étape uniquement sur la branche "main"
+    - main  # Cette étape ne s'exécute que sur la branche principale
 
 # Deploy stage - pour déployer l'application
 deploy:
   stage: deploy
-  image: node:18  # Mise à jour pour Node.js 18
+  image: node:18  # Utilisation de Node.js 18 pour le déploiement
   script:
     - echo "Démarrage de l'application"
-    - npm start  # Démarre l'application
+    - npm start  # Démarre l'application avec "npm start"
   only:
-    - main  # Exécute cette étape uniquement sur la branche "main"
+    - main  # Cette étape ne s'exécute que sur la branche principale
 
 # Variables d'environnement
 variables:

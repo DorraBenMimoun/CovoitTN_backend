@@ -1,6 +1,5 @@
 stages:
   - build
-  - test
   - deploy
 
 # Build stage - pour installer les dépendances

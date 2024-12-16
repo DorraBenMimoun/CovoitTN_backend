@@ -1,46 +1,36 @@
 stages:
-  - install
-  - test
   - build
+  - test
   - deploy
 
-# Etape d'installation des dépendances
-install:
-  stage: install
-  image: node:16 # Utilise l'image Node.js officielle
-  script:
-    - npm install # Installer toutes les dépendances
-  only:
-    - main # Ou la branche sur laquelle tu veux que cela soit exécuté
-
-# Etape de tests unitaires et tests d'intégration
-test:
-  stage: test
-  image: node:16 # Utilise l'image Node.js pour les tests
-  script:
-    - npm install # Assurez-vous que les dépendances sont installées avant les tests
-    - npm run unit-test # Exécuter les tests unitaires
-    - npm run integration-test # Exécuter les tests d'intégration
-  only:
-    - main # Ou la branche sur laquelle tu veux que cela soit exécuté
-
-# Etape de build : construction de l'image Docker
+# Build stage - pour installer les dépendances (par exemple, avec npm si c'est une app Node.js)
 build:
   stage: build
-  image: docker:20.10.16 # Utilise l'image officielle Docker
-  services:
-    - docker:19.03.12-dind # Docker-in-Docker pour la construction des images Docker
   script:
-    - docker build -t my-node-app . # Construire l'image Docker
-    - docker tag my-node-app registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA # Tag de l'image
-  only:
-    - main # Ou la branche sur laquelle tu veux que cela soit exécuté
+    - echo "Installation des dépendances"
+    - npm install
+  cache:
+    paths:
+      - node_modules/
 
-# Etape de déploiement : déployer l'application
+# Test stage - pour exécuter les tests de l'application (si vous en avez)
+test:
+  stage: test
+  script:
+    - echo "Exécution des tests"
+    - npm test
+  only:
+    - main
+
+# Deploy stage - pour déployer votre application sur un serveur distant (Heroku, AWS, etc.)
 deploy:
   stage: deploy
   script:
-    - docker push registry.gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA # Pousser l'image vers GitLab Container Registry
-    - npm start # Démarrer l'application (assume que tu veux exécuter cela sur le serveur de déploiement)
+    - echo "Déploiement de l'application"
+    - npm run deploy # Si vous avez un script pour déployer, par exemple vers un serveur ou une plateforme cloud
   only:
-    - main # Ou la branche de production
+    - main
+
+# Vous pouvez également configurer des variables d'environnement sensibles (API keys, etc.)
+variables:
+  NODE_ENV: "production"

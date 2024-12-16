@@ -21,6 +21,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "http": "^0.0.1-security",
+    "jest": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.9.0",
     "mongodb-memory-server": "^10.1.2",

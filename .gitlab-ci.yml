@@ -3,9 +3,10 @@ stages:
   - test
   - deploy
 
-# Build stage - pour installer les dépendances (par exemple, avec npm si c'est une app Node.js)
+# Build stage - pour installer les dépendances
 build:
   stage: build
+  image: node:16 # Utilisation de l'image Node.js officielle
   script:
     - echo "Installation des dépendances"
     - npm install
@@ -13,24 +14,28 @@ build:
     paths:
       - node_modules/
 
-# Test stage - pour exécuter les tests de l'application (si vous en avez)
+# Test stage - pour exécuter les tests de l'application (unitaires et d'intégration)
 test:
   stage: test
+  image: node:16 # Utilisation de l'image Node.js officielle
   script:
-    - echo "Exécution des tests"
-    - npm test
+    - echo "Exécution des tests unitaires"
+    - npm run unit-test
+    - echo "Exécution des tests d'intégration"
+    - npm run integration-test
   only:
     - main
 
-# Deploy stage - pour déployer votre application sur un serveur distant (Heroku, AWS, etc.)
+# Deploy stage - pour déployer l'application
 deploy:
   stage: deploy
+  image: node:16 # Utilisation de l'image Node.js officielle
   script:
-    - echo "Déploiement de l'application"
-    - npm run deploy # Si vous avez un script pour déployer, par exemple vers un serveur ou une plateforme cloud
+    - echo "Démarrage de l'application"
+    - npm start
   only:
     - main
 
-# Vous pouvez également configurer des variables d'environnement sensibles (API keys, etc.)
+# Variables d'environnement
 variables:
   NODE_ENV: "production"

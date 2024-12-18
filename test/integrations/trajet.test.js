@@ -1,12 +1,6 @@
 const request = require('supertest');
 const app = require('../../index');
 
-const Trajet = require('../../models/trajet.model');
-
-afterEach(async () => {
-  // Ptet effacer les trajets ?
-});
-
 describe('Gérer trajets', () => {
   let trajetId;
   it('devrait créer un trajet valide', async () => {

@@ -227,12 +227,11 @@ router.get('/trajet/:id', reservationController.getReservationsByTrajet);
  */
 router.get('/passager/:id', reservationController.getReservationsByPassager);
 
-router.get('/passager/:id', reservationController.getReservationsByPassager);
 
 //accepter une reservation
 /**
  * @swagger
- * /reservations/accepter/{id}:
+ * /reservations/{id}/accepter:
  *   put:
  *     summary: Accepter une réservation et fusionner avec une réservation existante si nécessaire
  *     tags:
@@ -262,12 +261,12 @@ router.get('/passager/:id', reservationController.getReservationsByPassager);
  *       500:
  *         description: Erreur interne du serveur
  */
-router.put('/accepter/:id', reservationController.acceptReservation);
+router.put('/:id/accepter', reservationController.acceptReservation);
 
 //refuser une reservation
 /**
  * @swagger
- * /reservations/refuser/{id}:
+ * /reservations/{id}/refuser:
  *   put:
  *     summary: Refuser une réservation
  *     tags:
@@ -287,12 +286,12 @@ router.put('/accepter/:id', reservationController.acceptReservation);
  *       500:
  *         description: Erreur interne du serveur
  */
-router.put('/refuser/:id', reservationController.refuseReservation);
+router.put('/:id/refuser', reservationController.refuseReservation);
 
 //annuler une reservation
 /**
  * @swagger
- * /reservations/annuler/{id}:
+ * /reservations/{id}/annuler:
  *   put:
  *     summary: Annuler une réservation
  *     tags:
@@ -312,7 +311,7 @@ router.put('/refuser/:id', reservationController.refuseReservation);
  *       500:
  *         description: Erreur interne du serveur
  */
-router.put('/annuler/:id', reservationController.cancelReservation);
+router.put('/:id/annuler', reservationController.cancelReservation);
 
 
 /**

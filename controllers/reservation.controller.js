@@ -6,6 +6,7 @@ const Trajet = require('../models/trajet.model.js');
 exports.createReservation = async (req, res) => {
   try {
     const { idTrajet, idPassager, nbrPlacesReservees, prixTotal, messagePassager } = req.body;
+
     // Récupérer le trajet pour vérifier le nombre de places disponibles
     const trajet = await Trajet.findById(idTrajet);
 
@@ -13,14 +14,20 @@ exports.createReservation = async (req, res) => {
       return res.status(404).json({ message: 'Trajet non trouvé' });
     }
 
+
     // Calculer les places restantes
     const reservations = await Reservation.find({ idTrajet });
     const placesRestantes = trajet.placesDispo - reservations.reduce((sum, res) => sum + res.nbrPlacesReservees, 0);
  
+      if( nbrPlacesReservees <= 0){
+      return res.status(400).json({ message: 'Le nombre de places réservées doit être supérieur à 0' });
+    }
 
     if (nbrPlacesReservees > placesRestantes) {
       return res.status(400).json({ message: 'Nombre de places demandées supérieur aux places disponibles.' });
     }
+  
+    
 
     // Créer la réservation
     const reservation = new Reservation({

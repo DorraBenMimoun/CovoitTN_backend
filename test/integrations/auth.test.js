@@ -1,6 +1,5 @@
 const request = require('supertest');
 const app = require('../../index');
-
 const Utilisateur = require('../../models/utilisateur.model');
 
 afterEach(async () => {

@@ -3,9 +3,7 @@ const { expect } = chai;
 const mongoose = require('mongoose');
 const Utilisateur = require('../../models/utilisateur.model'); // Chemin relatif vers le modèle
 const { MongoMemoryServer } = require('mongodb-memory-server');
-
 let mongoServer;
-
 describe('Modèle Utilisateur', () => {
   // Avant tous les tests, lancer une instance de MongoDB en mémoire et se connecter
   before(async () => {

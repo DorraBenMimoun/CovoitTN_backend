@@ -33,7 +33,7 @@ app.use(
 );
 app.use(upload.any()); // Utilisez cela pour parser les données de FormData
 
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(cookieParser());
 
 // Définir les routes de Swagger

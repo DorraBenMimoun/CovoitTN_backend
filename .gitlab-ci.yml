@@ -1,6 +1,7 @@
 stages:
   - test-unit
   - test-integration
+  - build-and-push
 
 # Étape pour les tests unitaires
 test-unit:
@@ -12,7 +13,6 @@ test-unit:
     - echo "Vérification de l'installation de Mocha"
     - npx mocha --version  # Vérifie si Mocha est correctement installé
     - echo "Exécution des tests unitaires"
-    - ls
     - npm run unit-test  # Exécute les tests unitaires définis dans le script "unit-test"
   only:
     - main  # Cette étape ne s'exécute que sur la branche principale
@@ -26,5 +26,21 @@ test-integration:
     - npm install --only=dev  # Installe uniquement les devDependencies (comme Mocha, Chai, etc.)
     - echo "Exécution des tests d'intégration"
     - npm run integration-test  # Exécute les tests d'intégration définis dans le script "integration-test"
+  only:
+    - main  # Cette étape ne s'exécute que sur la branche principale
+
+# Étape pour construire et pousser l'image Docker
+build-and-push:
+  stage: build-and-push
+  image: docker:latest  # Utilisation de Docker
+  services:
+    - docker:dind
+  script:
+    - echo "Construction de l'image Docker"
+    - docker build -t ihebbennaceur/my-backend-app .
+    - echo "Connexion à Docker Hub"
+    - docker login -u "ihebbennaceur" -p "$DOCKER_HUB_PASSWORD"
+    - echo "Pousser l'image Docker sur Docker Hub"
+    - docker push ihebbennaceur/my-backend-app
   only:
     - main  # Cette étape ne s'exécute que sur la branche principale
